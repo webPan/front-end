@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="generator" content="VuePress 2.0.0-rc.15" />
+    <style>
+      :root {
+        --vp-c-bg: #fff;
+      }
+
+      [data-theme='dark'] {
+        --vp-c-bg: #22272e;
+      }
+
+      html,
+      body {
+        background-color: var(--vp-c-bg);
+      }
+    </style>
+    <script>
+      const userMode = localStorage.getItem('vuepress-color-scheme')
+      const systemDarkMode =
+        'matchMedia' in window
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          : false
+
+      if (userMode === 'light') {
+        document.documentElement.dataset.theme = 'light'
+      } else if (userMode === 'dark' || systemDarkMode) {
+        document.documentElement.dataset.theme = 'dark'
+      }
+    </script>
+    <title>VuePress</title><meta name="description" content="My first VuePress Site">
+    <link rel="preload" href="/front-end/blog/assets/style-ls6wCw2L.css" as="style"><link rel="stylesheet" href="/front-end/blog/assets/style-ls6wCw2L.css">
+    <link rel="modulepreload" href="/front-end/blog/assets/app-hyJRllny.js"><link rel="modulepreload" href="/front-end/blog/assets/404.html-Blc9SKRZ.js">
+    <link rel="prefetch" href="/front-end/blog/assets/algorithm.html-BO1aAZd_.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/base.html-pSXgXMtb.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/blog.html-fSnbc8NE.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/es6.html-CJQ5sqo-.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/get-started.html-DynhZwU0.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/index.html-Bg-0y2KW.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/intermediate.html-rMT3HvSi.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/mobile.html-BTcqzkPY.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/principle.html-qyF0trNf.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/react.html-bweAH3fl.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/index.html-Bg-0y2KW.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/senior.html-BcK1uC4H.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/vue.html-DjGDHIYr.js" as="script"><link rel="prefetch" href="/front-end/blog/assets/vue3.html-Yd0JNOkd.js" as="script">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="vp-theme-container" vp-container data-v-2500e4b8><main class="page" data-v-2500e4b8><div class="theme-default-content" vp-content data-v-2500e4b8><h1 data-v-2500e4b8>404</h1><blockquote data-v-2500e4b8>That&#39;s a Four-Oh-Four.</blockquote><a class="route-link" href="/front-end/blog/" data-v-2500e4b8>Take me home</a></div></main></div><!--[--><!----><!--]--><!--]--></div>
+    <script type="module" src="/front-end/blog/assets/app-hyJRllny.js" defer></script>
+  </body>
+</html>
