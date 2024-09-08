@@ -2,7 +2,7 @@
 home: true
 heroAlt: 
 heroText: 前端文档
-tagline: 前端文档包含Vue、React、Webpack、小程序、uniApp等
+tagline: 前端文档包含Vue、React、Webpack等
 actionText: Get Started
 actionLink: /base.html
 features:
