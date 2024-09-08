@@ -1345,157 +1345,749 @@ export default {
 
 
 
+#### 基本概念
+手动验证是指在提交表单时，手动编写验证逻辑，常用于简单表单场景。
 
+#### 示例代码
+```vue
+<template>
+  <form @submit.prevent="handleSubmit">
+    <div>
+      <label for="name">Name:</label>
+      <input type="text" v-model="name" />
+      <span v-if="errors.name">{{ errors.name }}</span>
+    </div>
+    <div>
+      <label for="email">Email:</label>
+      <input type="email" v-model="email" />
+      <span v-if="errors.email">{{ errors.email }}</span>
+    </div>
+    <button type="submit">Submit</button>
+  </form>
+</template>
 
+<script>
+export default {
+  data() {
+    return {
+      name: '',
+      email: '',
+      errors: {},
+    };
+  },
+  methods: {
+    validateForm() {
+      this.errors = {};
+      if (!this.name) {
+        this.errors.name = 'Name is required';
+      }
+      if (!this.email) {
+        this.errors.email = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(this.email)) {
+        this.errors.email = 'Email is invalid';
+      }
+      return Object.keys(this.errors).length === 0;
+    },
+    handleSubmit() {
+      if (this.validateForm()) {
+        // 表单提交逻辑
+      }
+    },
+  },
+};
+</script>
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## ref和reactive
+## `ref` 和 `reactive` 的区别
 >Vue3中的ref和reactive有什么区别？
 
 
 
+在 Vue 3 中，`ref` 和 `reactive` 是两种常用的 API，用于创建响应式的数据。但是它们有一些重要的区别和适用场景。
 
+#### 1. 定义与用法
 
+- **`ref`**：`ref` 用于创建一个响应式的数据包裹对象。它可以包裹任何类型的值（基本类型或引用类型），并使其具有响应性。`ref` 返回的对象包含一个 `.value` 属性，用于访问或修改其包裹的值。
 
+```javascript
+import { ref } from 'vue';
 
+const count = ref(0);
+console.log(count.value); // 0
+count.value = 5;
+console.log(count.value); // 5
+```
 
+- **`reactive`**：reactive 用于将一个对象转换为响应式对象。它只能应用于对象类型（包括数组），并且返回的对象本身是响应式的，没有 .value 属性。你可以直接访问和修改响应式对象的属性。
+```js
+import { reactive } from 'vue';
 
+const state = reactive({
+  count: 0,
+  message: 'Hello'
+});
 
+console.log(state.count); // 0
+state.count = 5;
+console.log(state.count); // 5
+```
+#### 2. 使用场景
+- **`ref` 适用于基本类型**：如果你需要创建一个包含基本类型（如数字、字符串、布尔值等）的响应式数据，ref 是首选。它也可以包裹对象或数组，但这种情况下 .value 的使用可能稍显繁琐。
+```js
+const name = ref('Vue');
+```
 
+- **`reactive` 适用于对象和数组**：当你需要创建一个包含多个属性的响应式对象或数组时，reactive 是更好的选择。它使得对对象或数组的操作更为自然，不需要频繁访问 .value。
+```js
+const user = reactive({
+  name: 'Alice',
+  age: 25
+});
+```
 
+#### 3. 深度响应性
 
+- `ref`：对于基本类型的值，ref 不涉及深度响应性的问题。但是，当 ref 包裹对象时，对象内部的属性不会自动变成响应式，需要借助 reactive 或者手动对嵌套的对象使用 ref。
+```js
+const nested = ref({
+  inner: { count: 0 }
+});
 
+nested.value.inner.count = 1; // 响应性未触发
+```
+- `reactive`：reactive 会递归地将对象内部的所有嵌套对象转换为响应式，因此对嵌套对象的修改同样会触发响应性更新。
+```js
+const nested = reactive({
+  inner: { count: 0 }
+});
 
+nested.inner.count = 1; // 响应性触发
+```
 
+#### 4. 模板中使用
+- `ref`：在模板中使用 ref 的时候，可以直接使用 .value 访问其值，但 Vue 3 中模板会自动解包 ref，因此可以直接使用而无需 .value。
+```vue
+<template>
+  <div>{{ count }}</div>
+</template>
 
+<script>
+export default {
+  setup() {
+    const count = ref(0);
+    return { count };
+  }
+};
+</script>
+```
 
+- `reactive`：reactive 创建的对象可以直接在模板中使用，与普通对象的使用方式一致。
+```vue
+<template>
+  <div>{{ state.count }}</div>
+</template>
 
+<script>
+export default {
+  setup() {
+    const state = reactive({
+      count: 0
+    });
+    return { state };
+  }
+};
+</script>
+```
+
+#### 5.  ref 和 reactive 的结合使用
+在某些复杂场景中，你可以结合 ref 和 reactive 使用。例如，使用 ref 来管理整个对象的响应性，并使用 reactive 创建其内部的对象：
+
+```js
+const state = ref({
+  user: reactive({
+    name: 'Alice',
+    age: 25
+  })
+});
+
+```
+
+#### 总结
+- `ref` 适用于包裹基本类型或单一变量，尤其在需要频繁引用 `.value` 的场景中。
+- `reactive` 适用于需要处理复杂对象或数组，并且希望所有嵌套对象都具有响应性的场景。
+
+选择使用 `ref` 还是 `reactive` 取决于你的数据结构和使用需求。在实际开发中，这两者可以相互配合使用，以达到最佳的开发体验和性能。
 
 
 ## 全局的错误处理
 >Vue中如何实现全局的错误处理？
 
+在 Vue 应用中，处理错误是确保应用稳定性的重要部分。Vue 提供了多种机制来捕获和处理全局错误，从而防止未处理的错误导致用户体验不佳。以下是几种实现全局错误处理的方法。
 
+#### 1. 使用 `errorHandler` 捕获全局错误
 
+Vue 提供了一个全局的 `errorHandler` 选项，可以用于捕获组件渲染过程中的错误。你可以在 Vue 根实例中配置 `errorHandler`。
 
+```javascript
+import { createApp } from 'vue';
 
+const app = createApp(App);
 
+app.config.errorHandler = (err, vm, info) => {
+  console.error('Vue 捕获到错误:', err);
+  console.log('发生错误的组件实例:', vm);
+  console.log('错误信息:', info);
+  // 在这里可以进行错误上报、日志记录等操作
+};
+app.mount('#app');
+```
+- `err`：捕获到的错误对象。
+- `vm`：发生错误的 Vue 实例。
+- `info`：Vue 特定的错误信息，如生命周期钩子名称。
 
+#### 2. 使用 `onErrorCaptured` 处理组件错误
+Vue 3 中的 onErrorCaptured 是一个组合式 API，可以在组件中捕获子组件的错误。与 errorHandler 不同，它是在组件层级捕获错误的。
+```js
+import { onErrorCaptured } from 'vue';
 
+export default {
+  setup() {
+    onErrorCaptured((err, instance, info) => {
+      console.error('捕获到子组件的错误:', err);
+      return false; // 返回 false 可阻止错误继续向上传播
+    });
+  },
+};
+```
+- `err`：捕获到的错误对象。
+- `instance`：发生错误的组件实例。
+- `info`：Vue 特定的错误信息。
 
+#### 3. 使用 `try-catch` 在异步代码中捕获错误
+对于异步操作中的错误，try-catch 语句是必不可少的。你可以在异步函数中手动捕获错误，并在捕获后执行相应的逻辑。
+```js
+export default {
+  async setup() {
+    try {
+      const data = await fetchData();
+      // 处理数据
+    } catch (error) {
+      console.error('异步操作中捕获到错误:', error);
+      // 可以在这里显示用户友好的错误提示
+    }
+  }
+};
+```
+#### 4. 全局监听未捕获的 Promise 错误
+在 JavaScript 中，未捕获的 Promise 错误不会自动冒泡到 Vue 的 errorHandler。你可以使用 `window.addEventListener` 来监听这些错误，并进行全局处理。
+```js
+window.addEventListener('unhandledrejection', event => {
+  console.error('未捕获的 Promise 错误:', event.reason);
+  // 你可以在这里执行错误日志记录或显示提示
+});
+```
 
+#### 5. 配合第三方库进行错误监控
+你可以将 Vue 的全局错误处理与第三方错误监控服务（如 Sentry）结合使用，以便在应用中自动报告错误。
+```js
+import * as Sentry from '@sentry/vue';
+import { Integrations } from '@sentry/tracing';
 
+const app = createApp(App);
 
+Sentry.init({
+  app,
+  dsn: 'YOUR_SENTRY_DSN',
+  integrations: [
+    new Integrations.BrowserTracing({
+      tracingOrigins: ['localhost', 'your-domain.com'],
+    }),
+  ],
+  tracesSampleRate: 1.0,
+});
+```
 
+#### 6. 处理错误边界
+在大型应用中，你可能希望为某些特定组件提供错误边界。你可以创建一个通用的错误边界组件来捕获子组件的渲染错误。
+```js
+import { defineComponent, ref } from 'vue';
 
+export default defineComponent({
+  name: 'ErrorBoundary',
+  setup(props, { slots }) {
+    const error = ref(null);
 
+    const onErrorCaptured = (err) => {
+      error.value = err;
+      return false;
+    };
 
+    return () => {
+      if (error.value) {
+        return <div>Something went wrong: {error.value.message}</div>;
+      }
+      return slots.default ? slots.default() : null;
+    };
+  },
+});
+```
+在使用时，可以将该组件包裹在可能会出错的组件外层：
+```vue
+<template>
+  <ErrorBoundary>
+    <ChildComponent />
+  </ErrorBoundary>
+</template>
+
+<script>
+import ErrorBoundary from './ErrorBoundary.vue';
+import ChildComponent from './ChildComponent.vue';
+
+export default {
+  components: {
+    ErrorBoundary,
+    ChildComponent
+  }
+};
+</script>
+```
+
+#### 总结
+- 使用 `errorHandler` 处理 `Vue` 渲染过程中的全局错误。
+- 在组件中使用 `onErrorCaptured` 捕获子组件的错误。
+- 使用 `try-catch` 捕获异步操作中的错误。
+- 监听 `unhandledrejection` 事件处理未捕获的 `Promise` 错误。
+- 结合第三方库如 `Sentry` 进行错误监控。
+- 创建错误边界组件处理特定区域的错误。
 
 ## nextTick
 >如何在Vue中使用nextTick？它的作用是什么？
 
 
+#### 什么是`nextTick`？
 
+`nextTick` 是Vue提供的一个方法，用于在下一个DOM更新循环结束之后执行指定的回调函数。Vue在更新DOM时是异步的，当数据发生变化时，Vue不会立即同步更新DOM，而是开启一个异步队列来批量更新。在某些情况下，你可能希望在数据更新并且DOM已经完成重新渲染后执行某些操作，这时就可以使用 `nextTick`。
 
+#### 作用
 
+`nextTick` 的主要作用是确保在更新数据并触发DOM变化之后，等待Vue完成DOM更新，然后再执行某些逻辑。常见的应用场景包括：
 
+- 获取更新后的DOM元素信息。
+- 在DOM更新后执行某些操作（如动画、计算宽高等）。
+- 确保在Vue组件更新完毕后再执行依赖于最新DOM状态的代码。
 
+#### 用法
 
+`nextTick` 可以通过两种方式使用：回调函数形式和Promise形式。
 
+#### 回调函数形式
 
+```javascript
+this.$nextTick(function () {
+  // DOM更新完成后执行的代码
+  console.log('DOM has been updated');
+});
+```
 
+#### Promise形式
+```js
+this.$nextTick()
+  .then(() => {
+    // DOM更新完成后执行的代码
+    console.log('DOM has been updated');
+  });
+```
 
+#### 示例
+假设我们有一个计数器，当计数增加时，我们希望获取最新的按钮宽度：
+```vue
+<template>
+  <div>
+    <button ref="btn" @click="increment">{{ count }}</button>
+  </div>
+</template>
 
+<script>
+export default {
+  data() {
+    return {
+      count: 0
+    };
+  },
+  methods: {
+    increment() {
+      this.count++;
+      this.$nextTick(() => {
+        console.log('Button width:', this.$refs.btn.offsetWidth);
+      });
+    }
+  }
+};
+</script>
+```
+在这个例子中，当 `increment` 方法被调用时，`count` 会增加，同时 `nextTick` 确保在DOM更新完成后，我们能够正确获取按钮的最新宽度。
 
-
+#### 总结
+nextTick 是Vue中一个非常实用的工具，用于确保在DOM更新完成后执行某些操作。它在处理需要与最新DOM状态交互的场景中尤为重要，保证了代码执行顺序的正确性。
 
 
 ## Teleport组件
->Vue3中的Teleport组件有什么作用？如何使用？
+> Vue3中的Teleport组件有什么作用？如何使用？
 
+#### Teleport 组件的作用
+Teleport 是 Vue 3 引入的一个新组件，允许你将组件的渲染内容移动到指定的 DOM 节点之外。这在处理模态框、对话框、通知等全局 UI 元素时非常有用。通常，这些元素需要被渲染在与组件本身不同的 DOM 层级中，以避免样式或功能问题。
 
+#### Teleport 组件的使用方法
+基本用法
+你可以使用 Teleport 组件将其包裹的内容传送到指定的 DOM 位置。使用时，需要通过 to 属性指定目标容器的选择器。
+```vue
+<template>
+  <div>
+    <button @click="showModal = true">Show Modal</button>
+    <Teleport to="body">
+      <div v-if="showModal" class="modal">
+        <div class="modal-content">
+          <span @click="showModal = false" class="close">&times;</span>
+          <p>This is a modal dialog.</p>
+        </div>
+      </div>
+    </Teleport>
+  </div>
+</template>
 
+<script>
+export default {
+  data() {
+    return {
+      showModal: false,
+    };
+  },
+};
+</script>
+```
+#### to 属性
+- **必填**: to  
+- **描述**: to 属性用于指定目标容器的选择器。它可以是一个 CSS 选择器字符串或者一个返回 HTML 元素的函数。
+```vue
+<Teleport to="#some-element">
+  <!-- 将内容传送到 id 为 some-element 的元素中 -->
+</Teleport>
+```
+#### 其他常用场景
+- 全局模态框: 可以将模态框渲染到 body 以避免被父组件样式影响。
+- 全局通知: 将通知组件移至 body 以便在页面的任何地方都能正确显示。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+#### 总结
+`Teleport` 组件为 Vue 3 提供了一种方便的方式来管理全局 UI 元素的位置，让你能够将内容渲染到 Vue 组件树外部的任意 DOM 节点。这在需要跨越组件层次结构时尤为实用。
 
 ## Scoped CSS
 >Vue中如何使用Scoped CSS？它的作用是什么？
 
 
+#### 1. 什么是 Scoped CSS?
 
+Scoped CSS 是 Vue.js 提供的一种样式作用域机制，用于确保组件的样式只影响该组件本身，而不会影响全局或其他组件的样式。这有助于避免样式冲突和意外的样式覆盖。
 
+#### 2. 如何在 Vue 中使用 Scoped CSS
 
+在 Vue 组件中，使用 `scoped` 属性可以将 `<style>` 标签内的样式限制在当前组件范围内。以下是使用 Scoped CSS 的步骤：
 
+#### 2.1 基本用法
 
+在 Vue 单文件组件（`.vue` 文件）中，添加 `scoped` 属性到 `<style>` 标签：
 
+```vue
+<template>
+  <div class="example">
+    这是一段示例文本。
+  </div>
+</template>
 
+<script>
+export default {
+  name: "ExampleComponent"
+};
+</script>
 
+<style scoped>
+.example {
+  color: blue;
+}
+</style>
+```
+在这个示例中，.example 这个类的样式只会应用到 ExampleComponent 组件内部的元素，而不会影响其他组件。
 
+#### 2.2 多个 style 标签
+你可以在同一个组件中使用多个 style 标签，并且其中的一个或多个可以带有 scoped 属性：
 
+```vue
+<style scoped>
+/* 仅限当前组件 */
+.example {
+  color: blue;
+}
+</style>
 
+<style>
+/* 全局样式 */
+body {
+  font-family: Arial, sans-serif;
+}
+</style>
+```
+这种方式可以混合使用全局样式和局部样式。
+
+#### 3. Scoped CSS 的实现原理
+
+Vue 通过在组件的根元素和 Scoped CSS 中的每一个选择器上添加一个独特的属性（例如 data-v-xxxxxxx）来实现样式的作用域隔离。这样可以确保样式只会影响当前组件的元素。  
+
+例如，上述 .example 类可能会被编译为：
+```css
+.example[data-v-xxxxxxx] {
+  color: blue;
+}
+```
+
+同时，组件的根元素会被编译为：
+```html
+<div class="example" data-v-xxxxxxx>
+  这是一段示例文本。
+</div>
+```
+这样，即使其他组件中也存在 .example 类，由于没有相同的 data-v-xxxxxxx 属性，它们的样式不会互相影响。
+
+#### 4. 注意事项
+- **动态生成的内容**：如果你通过 JavaScript 动态添加或修改了元素，需要确保这些元素也包含正确的 data-v-xxxxxxx 属性。
+- **子组件**：Scoped CSS 只会作用于当前组件的模板内，不会影响子组件的内容。如果希望对子组件应用样式，仍需使用全局样式或通过子组件的 props 传递样式。
+
+#### 5. 什么时候使用 Scoped CSS?
+Scoped CSS 非常适合在组件化开发中使用，因为它有助于保持样式的封装性，防止不同组件之间的样式冲突。特别是在大型项目中，使用 Scoped CSS 可以显著提高代码的可维护性。
 
 
 ## 递归调用
 >Vue中如何实现组件的递归调用？需要注意哪些问题？
 
+递归调用是一种在组件内部再次调用自身的技术，通常用于构建树形结构或嵌套结构。在 Vue 中，实现递归调用需要考虑以下几个步骤和注意事项。
 
+#### 1. 定义递归组件
+首先，你需要定义一个 Vue 组件，它可以在自身的模板中引用自己。为了防止组件在模板中未被识别，你需要使用 name 属性为组件命名，并通过 components 选项将自己注册到自身中。
 
+```vue
+<template>
+  <div>
+    <div>{{ node.name }}</div>
+    <ul v-if="node.children && node.children.length">
+      <li v-for="child in node.children" :key="child.id">
+        <!-- 递归调用 -->
+        <RecursiveComponent :node="child" />
+      </li>
+    </ul>
+  </div>
+</template>
 
+<script>
+export default {
+  name: 'RecursiveComponent',
+  props: {
+    node: {
+      type: Object,
+      required: true,
+    },
+  },
+  components: {
+    RecursiveComponent: () => import('./RecursiveComponent.vue'),
+  },
+};
+</script>
+```
+在上面的例子中，RecursiveComponent 组件会递归调用自身，直到 node.children 为空或未定义为止。
 
+#### 2. 使用递归组件
+你可以在其他组件或主应用中使用这个递归组件，并传入一个具有层级结构的节点对象作为数据源。
+```vue
+<template>
+  <div>
+    <RecursiveComponent :node="treeData" />
+  </div>
+</template>
 
+<script>
+import RecursiveComponent from './RecursiveComponent.vue';
 
-
-
-
-
-
-
-
+export default {
+  components: {
+    RecursiveComponent,
+  },
+  data() {
+    return {
+      treeData: {
+        name: 'Root',
+        id: 1,
+        children: [
+          {
+            name: 'Child 1',
+            id: 2,
+            children: [
+              {
+                name: 'Grandchild 1',
+                id: 3,
+              },
+            ],
+          },
+          {
+            name: 'Child 2',
+            id: 4,
+          },
+        ],
+      },
+    };
+  },
+};
+</script>
+```
+#### 3. 注意事项
+- **避免无限递归**: 需要确保组件递归的终止条件明确，比如判断 node.children 是否为空。当条件不明确或处理不当时，可能导致无限递归，从而引发栈溢出错误。
+- **性能问题**: 递归组件在复杂数据结构上可能导致性能问题，尤其是在节点层级过深时。可以考虑通过懒加载子节点的方式来优化性能。
+- **样式和布局**: 递归结构往往会导致嵌套的 DOM 结构，在设计样式时需要特别注意避免过度嵌套造成的布局问题。
+- **递归组件命名**: 确保递归组件的名称唯一且不与其他组件冲突，这样可以避免组件注册时出现问题。
 
 ## 监听路由的变化
 >Vue中如何监听路由的变化？有哪些方法？
 
+在 Vue.js 中，监听路由变化是一项常见的需求，尤其是在构建单页面应用（SPA）时。Vue 提供了多种方式来监听路由变化，以下是几种常用的方法：
 
+#### 1. 使用 `watch` 监听 `$route` 对象
 
+在 Vue 组件中，可以通过 `watch` 监听 `$route` 对象的变化，从而在路由发生变化时执行相应的逻辑。
 
+```vue
+<template>
+  <div>{{ currentPath }}</div>
+</template>
 
+<script>
+export default {
+  data() {
+    return {
+      currentPath: this.$route.path,
+    };
+  },
+  watch: {
+    $route(to, from) {
+      // 监听路由变化
+      console.log('路由从', from.fullPath, '变化到', to.fullPath);
+      this.currentPath = to.path;
+    },
+  },
+};
+</script>
+```
+#### 2. 使用 beforeRouteUpdate 导航守卫
+在使用 Vue Router 时，可以在组件中使用 beforeRouteUpdate 守卫来监听当前路由变化。
+```vue
+<template>
+  <div>{{ currentPath }}</div>
+</template>
 
+<script>
+export default {
+  data() {
+    return {
+      currentPath: this.$route.path,
+    };
+  },
+  beforeRouteUpdate(to, from, next) {
+    // 监听路由变化
+    console.log('路由从', from.fullPath, '变化到', to.fullPath);
+    this.currentPath = to.path;
+    next();
+  },
+};
+</script>
+```
 
+#### 3. 使用全局导航守卫 `router.beforeEach`
+除了在组件内部监听路由变化外，还可以使用 Vue Router 的全局导航守卫 router.beforeEach 来监听路由变化。这种方法适用于全局的路由监听需求。
 
+```js
+import Vue from 'vue';
+import Router from 'vue-router';
 
+Vue.use(Router);
 
+const router = new Router({
+  routes: [
+    // 路由配置
+  ],
+});
 
+router.beforeEach((to, from, next) => {
+  console.log('路由从', from.fullPath, '变化到', to.fullPath);
+  next();
+});
 
+export default router;
+```
 
-
-
-
-
+#### 4. 使用 router.afterEach 全局后置钩子
+除了 `beforeEach` 外，还可以使用 `router.afterEach` 来监听路由变化。与 `beforeEach` 不同的是，`afterEach` 不需要调用 `next`，并且是在导航确认之后调用。
+```js
+router.afterEach((to, from) => {
+  console.log('路由已从', from.fullPath, '变化到', to.fullPath);
+});
+```
 
 ## setup函数的作用
 >Vue3中的setup函数有什么作用？如何使用？
+#### 1. setup 函数的作用
+setup 是 Vue 3 组合式 API 的入口函数，是组件中用于初始化逻辑的一个函数。它在组件实例被创建之前调用，适用于以下场景：
+
+- **数据定义**：可以使用 ref 或 reactive 创建响应式的数据。
+- **计算属性**：通过 computed 定义计算属性。
+- **侦听器**：通过 watch 或 watchEffect 监听数据的变化。
+- **生命周期钩子**：可以通过 onMounted、onUnmounted 等钩子函数处理组件的生命周期。
+- **引入外部资源**：可以在 setup 函数中使用各种 Vue 的 API，或引入其他工具库。
+
+#### 2. setup 函数的使用方法
+```vue
+<template>
+  <div>
+    <p>{{ count }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+
+// 1. 定义响应式数据
+const count = ref(0)
+
+// 2. 定义计算属性
+const doubleCount = computed(() => count.value * 2)
+
+// 3. 定义方法
+function increment() {
+  count.value++
+}
+
+// 4. 生命周期钩子
+onMounted(() => {
+  console.log('组件已挂载')
+})
+</script>
+```
+
+#### 3. 注意事项
+- **返回值**：setup 函数不需要显式返回值，所有在 setup 中声明的变量、方法等会自动暴露给模板使用。
+- **this 访问限制**：在 setup 中无法使用 this 访问组件实例，因为组件实例尚未创建。需要通过参数或其他方式获取数据。
+- **性能优势**：setup 函数的运行顺序较早，能够提升组件的初始化性能，并且其作用范围仅限于函数内部，避免了 data、methods 等选项带来的命名冲突。
+
+#### 4. 组合式 API 与 Options API 的对比
+
+| 特性                | 组合式 API (`setup`)               | 选项式 API (`data`, `methods` 等) |
+|-------------------|----------------------------------|---------------------------------|
+| 数据组织           | 逻辑集中管理，可重用               | 分散在 `data`、`methods` 等内   |
+| 代码复用           | 更加灵活，通过函数实现复用         | 通过 `mixins` 或 `extends` 实现 |
+| 性能优化           | 初始化时更高效，组件实例化前运行   | 在组件实例创建后运行            |
+| 迁移成本           | 对 Vue 2 用户可能有学习曲线        | 更贴近传统的 Vue 2 开发模式     |
