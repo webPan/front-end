@@ -1567,7 +1567,7 @@
 这两种方法都依赖于对传递给组件的props的浅比较，如果 props 没有改变，那么组件将不会重新渲染。虽然这两种工具都非常有用，但是浅比较会带来额外的性能损失，因此如果使用不当，这两种方法都会对性能产生负面影响。
 通过使用 React Profiler，可以在使用这些方法前后对性能进行测量，从而确保通过进行给定的更改来实际改进性能。</li>
 </ul>
-<h4 id="什么是-fiber-架构" tabindex="-1"><a class="header-anchor" href="#什么是-fiber-架构"><span>什么是 Fiber 架构？</span></a></h4>
+<h2 id="什么是-fiber-架构" tabindex="-1"><a class="header-anchor" href="#什么是-fiber-架构"><span>什么是 Fiber 架构？</span></a></h2>
 <blockquote>
 <p>React中的“Fiber架构”是什么？它带来了哪些变化？</p>
 </blockquote>

@@ -11,7 +11,6 @@ export const routes = Object.fromEntries([
   ["/mobile.html", { loader: () => import(/* webpackChunkName: "mobile.html" */"D:/wwwroot/front-end/docs/.vuepress/.temp/pages/mobile.html.js"), meta: {"title":"移动端"} }],
   ["/principle.html", { loader: () => import(/* webpackChunkName: "principle.html" */"D:/wwwroot/front-end/docs/.vuepress/.temp/pages/principle.html.js"), meta: {"title":"原理类"} }],
   ["/react.html", { loader: () => import(/* webpackChunkName: "react.html" */"D:/wwwroot/front-end/docs/.vuepress/.temp/pages/react.html.js"), meta: {"title":""} }],
-  ["/", { loader: () => import(/* webpackChunkName: "index.html" */"D:/wwwroot/front-end/docs/.vuepress/.temp/pages/index.html.js"), meta: {"title":"基础类"} }],
   ["/senior.html", { loader: () => import(/* webpackChunkName: "senior.html" */"D:/wwwroot/front-end/docs/.vuepress/.temp/pages/senior.html.js"), meta: {"title":""} }],
   ["/vue.html", { loader: () => import(/* webpackChunkName: "vue.html" */"D:/wwwroot/front-end/docs/.vuepress/.temp/pages/vue.html.js"), meta: {"title":""} }],
   ["/vue3.html", { loader: () => import(/* webpackChunkName: "vue3.html" */"D:/wwwroot/front-end/docs/.vuepress/.temp/pages/vue3.html.js"), meta: {"title":""} }],
