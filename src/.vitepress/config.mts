@@ -5,7 +5,8 @@ export default defineConfig({
   title: "front-end",
   description: "front-end",
   outDir:'./../docs',
-  assetsDir: 'front-end',
+  // assetsDir: 'front-end',
+  base:'/front-end',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
