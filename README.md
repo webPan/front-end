@@ -1,5 +1,5 @@
 # 前端面试题
-> [在线地址](https://webpan.github.io/front-end/blog/)
+> [在线地址](https://webpan.github.io/front-end/)
 - Js初级
 - Js中级
 - Js高级
