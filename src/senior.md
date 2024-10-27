@@ -142,3 +142,68 @@ console.log(Object.prototype.__proto__); // null
 * 减少重绘回流 防抖和节流 及时清理环境
 * 性能更好的API 用对选择器 使用`requestAnimationFrame`来替代`setTimeout`和`setInterval` 使用`IntersectionObserver`来实现图片可视区域的懒加载 使用`web worker`
 * `webpack`优化 动态导入和按需加载 剔除无用代码 长缓存优化
+
+## SPA首屏加载速度慢怎么解决
+
+1. ### 减小入口文件体积  
+常用的手段是路由懒加载，把不同路由对应的组件分割成不同的代码块，待路由被请求的时候会单独打包路由，使得入口文件变小，加载速度大大增加
+
+2. ### UI框架按需加载
+在日常使用UI框架，例如element-UI、或者antd，我们经常性直接饮用整个UI库
+```javascript
+import ElementUI from 'element-ui'
+Vue.use(ElementUI)
+```
+但实际上我用到的组件只有按钮，分页，表格，输入与警告 所以我们要按需引用
+```javascript
+import { Button, Input, Pagination, Table, TableColumn, MessageBox } from 'element-ui';
+Vue.use(Button)
+Vue.use(Input)
+Vue.use(Pagination)
+```
+### 3. 组件重复打包
+假设A.js文件是一个常用的库，现在有多个路由使用了A.js文件，这就造成了重复下载
+解决方案：在webpack的config文件中，修改CommonsChunkPlugin的配置
+```javascript
+minChunks: 3
+```
+`minChunks`为3表示会把使用3次及以上的包抽离出来，放进公共依赖文件，避免了重复加载组件
+
+### 4. 图片资源的压缩
+图片资源虽然不在编码过程中，但它却是对页面性能影响最大的因素
+对于所有的图片资源，我们可以进行适当的压缩
+对页面上使用到的`icon`，可以使用在线字体图标，或者雪碧图，将众多小图标合并到同一张图上，用以减轻`http`请求压力。
+
+### 5. 开启GZip压缩
+拆完包之后，我们再用`gzip`做一下压缩 安装`compression-webpack-plugin`
+```bash
+cnmp i compression-webpack-plugin -D
+```
+在`vue.congig.js`中引入并修改`webpack`配置
+```javascript
+const CompressionPlugin = require('compression-webpack-plugin')
+
+configureWebpack: (config) => {
+    if (process.env.NODE_ENV === 'production') {
+        // 为生产环境修改配置...
+        config.mode = 'production'
+        return {
+            plugins: [new CompressionPlugin({
+                test: /\.js$|\.html$|\.css/, //匹配文件名
+                threshold: 10240, //对超过10k的数据进行压缩
+                deleteOriginalAssets: false //是否删除原文件
+            })]
+        }
+    }
+}
+```
+在服务器我们也要做相应的配置 如果发送请求的浏览器支持gzip，就发送给它gzip格式的文件 我的服务器是用express框架搭建的 只要安装一下compression就能使用
+```javascript
+const compression = require('compression')
+app.use(compression())  // 在其他中间件使用之前调用
+```
+### 6. 使用SSR
+SSR（Server side ），也就是服务端渲染，组件或页面通过服务器生成html字符串，再发送到浏览器
+
+从头搭建一个服务端渲染是很复杂的，vue应用建议使用`Nuxt.js`实现服务端渲染
+

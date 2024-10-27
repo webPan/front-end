@@ -2141,3 +2141,45 @@ beforeRouteLeave(to, from, next) {
 
 ## 父子组件生命周期执行顺序
 父beforeCreate -> 父created -> 父beforeMount -> 子beforeCreate -> 子created -> 子beforeMount -> 子mounted -> 父mounted
+
+## 为什么data属性是一个函数而不是一个对象？
+- 根实例对象`data`可以是对象也可以是函数（根实例是单例），不会产生数据污染情况
+- 组件实例对象`data`必须为函数，目的是为了防止多个组件实例对象之间共用一个`data`，产生数据污染。采用函数的形式，`initData`时会将其作为工厂函数都会返回全新对象
+
+## 为什么v-if和v-for不建议一起用? 
+### vue2
+1. 永远不要把 v-if 和 v-for 同时用在同一个元素上，带来性能方面的浪费（每次渲染都会先循环再进行条件判断）
+2. 如果条件出现在循环内部，可通过计算属性computed提前过滤掉那些不需要显示的项
+```javascript
+computed: {
+    items: function() {
+      return this.list.filter(function (item) {
+        return item.isShow
+      })
+    }
+}
+```
+### vue3
+::: warning 注意
+当它们同时存在于一个节点上时，`v-if` 比 `v-for` 的优先级更高。这意味着 `v-if` 的条件将无法访问到 `v-for` 作用域内定义的变量别名：
+:::
+```javascript
+<!--
+ 这会抛出一个错误，因为属性 todo 此时
+ 没有在该实例上定义
+-->
+<li v-for="todo in todos" v-if="!todo.isComplete">
+  {{ todo.name }}
+</li>
+```
+在外先包装一层 `<template>` 再在其上使用 `v-for` 可以解决这个问题 (这也更加明显易读)：
+```javascript
+<template v-for="todo in todos">
+  <li v-if="!todo.isComplete">
+    {{ todo.name }}
+  </li>
+</template>
+```
+## 什么是虚拟DOM？如何实现一个虚拟DOM？说说你的思路
+- 很多人认为虚拟 DOM 最大的优势是 diff 算法，减少 JavaScript 操作真实 DOM 的带来的性能消耗。虽然这一个虚拟 DOM 带来的一个优势，但并不是全部。
+- 虚拟 DOM 最大的优势在于抽象了原本的渲染过程，实现了跨平台的能力，而不仅仅局限于浏览器的 DOM，可以是安卓和 IOS 的原生组件，可以是近期很火热的小程序，也可以是各种GUI
