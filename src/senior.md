@@ -42,46 +42,96 @@ Proxy返回的是一个新对象,我们可以只操作新的对象达到目的,�
 * 数据采集 --> 数据上报 --> 服务端处理 --> 数据库存储 --> 数据监控可视化平台
 * `Performance` 接口可以获取到当前页面中与性能相关的信息，它是 `High Resolution Time API` 的一部分，同时也融合了 `Performance` `Timeline API`、`Navigation Timing API`、 `User Timing API` 和 `Resource Timing API`。
 
-## eventloop事件循环
-**背景**  
-JavaScript 是一门 单线程 语言，即同一时间只能执行一个任务，即代码执行是同步并且阻塞的。为了实现主线程的不阻塞，Event Loop这样的方案应运而生  
-![W3C](./assets/images/eventLoop.jpg)  
-在JavaScript中所有同步任务都在主线程上执行，这就形成一个执行栈。  
-而异步任务会被放置到异步处理模块中，当异步任务有了运行结果，就将该函数移入任务队列。  
-一旦执行栈中的所有同步任务执行完毕，引擎就会读取任务队列，然后将任务队列中的第一个任务放入执行栈中运行。  
-只要主线程空了，就会去读取任务队列，该过程不断重复，这就是所谓的 `事件循环`。  
+## JavaScript 事件循环（简单版）
+
+1. **执行顺序**：JavaScript 是单线程的，执行顺序分成**同步任务**和**异步任务**。
+2. **调用栈**：同步任务会直接按顺序进入调用栈执行。
+3. **任务队列**：异步任务会进入任务队列，分为**微任务队列**和**宏任务队列**。
+    - 微任务：优先级高，如 `Promise.then`、`queueMicrotask`。
+    - 宏任务：优先级低，如 `setTimeout`、`setInterval`。
+4. **事件循环**：每次调用栈清空后，事件循环会**先执行所有微任务**，再执行一个宏任务，循环往复。
+
+---
+
+### 示例代码
+
+```javascript
+console.log("同步 1");
+
+setTimeout(() => console.log("宏任务 1"), 0);
+
+Promise.resolve().then(() => console.log("微任务 1"));
+
+console.log("同步 2");
+```
 
 ## 深拷贝和浅拷贝
 浅拷贝只复制指向某个对象的指针，而不复制对象本身，新旧对象还是共享同一块内存  
 深拷贝会另外创造一个一模一样的对象，新对象跟原对象不共享内存，修改新对象不会改到原对象。  
 ```javascript
 //深拷贝
-function deepClone(obj){
-    //判断参数是不是一个对象
-    let objClone = obj instanceof Object?[]:{};
-    if(obj && typeof obj==="object"){
-        for(key in obj){
-            if(obj.hasOwnProperty(key)){
-                //判断ojb子元素是否为对象，如果是，递归复制
-                if(obj[key]&&typeof obj[key] ==="object"){
-                    objClone[key] = deepClone(obj[key]);
-                }else{
-                    //如果不是，简单复制
-                    objClone[key] = obj[key];
-                }
-            }
+function deepClone(obj, map = new WeakMap()) {
+    // 基本类型直接返回
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+    // 处理循环引用
+    if (map.has(obj)) {
+        return map.get(obj);
+    }
+    // 处理日期和正则
+    if (obj instanceof Date) {
+        return new Date(obj);
+    }
+    if (obj instanceof RegExp) {
+        return new RegExp(obj);
+    }
+    // 创建对象副本
+    const clone = Array.isArray(obj) ? [] : {};
+    map.set(obj, clone); // 存储引用以处理循环引用
+    // 递归复制属性
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            clone[key] = deepClone(obj[key], map);
         }
     }
-    return objClone;
+    return clone;
 }
 ```
 ## 原型和原型链
-* 在JavaScript中是使用构造函数来新建一个对象的，每一个构造函数的内部都有一个 prototype 属性，它的属性值是一个对象，这个对象包含了可以由该构造函数的所有实例共享的属性和方法。当使用构造函数新建一个对象后，在这个对象的内部将包含一个指针，这个指针指向构造函数的 prototype 属性对应的值，这个指针被称为对象的原型。  
 
-* 当访问一个对象的属性时，如果这个对象内部不存在这个属性，那么它就会去它的原型对象里找这个属性，这个原型对象又会有自己的原型，于是就这样一直找下去，这就叫原型链
-## proto 和 prototype 的区别
-1. 对象有属性`__proto__`,指向该对象的构造函数的原型对象。
-2. 方法除了有属性`__proto__`,还有属性`prototype`，`prototype`指向该方法的原型对象。
+在 JavaScript 中，**原型**和**原型链**是对象继承的重要概念。理解这两个概念可以帮助我们更好地理解 JavaScript 的继承机制。
+
+### 1. 原型（Prototype）
+
+每个 JavaScript 对象都有一个特殊的属性 `__proto__`，它指向该对象的**原型**，即另一个对象。这个**原型对象**包含了该对象可以继承的属性和方法。
+
+通常，通过构造函数创建的对象，其原型就是该构造函数的 `prototype` 属性指向的对象。例如：
+
+```javascript
+function Person(name) {
+  this.name = name;
+}
+Person.prototype.sayHello = function() {
+  console.log("Hello, " + this.name);
+};
+
+const person1 = new Person("Alice");
+person1.sayHello();  // 输出: "Hello, Alice"
+```
+在上面的代码中，`person1` 通过 `__proto__` 继承了 `Person.prototype` 上的 `sayHello` 方法。
+
+### 2. 原型链（Prototype Chain）
+`JavaScript` 的对象是通过原型链来实现继承的。当访问一个对象的属性或方法时，`JavaScript` 会首先在对象自身查找，如果找不到，就会沿着对象的 `__proto__` 链向上查找，直到找到该属性或方法，或者到达 `null` 结束。这条链接所有原型对象的链条就称为原型链。
+```javascript
+console.log(person1.__proto__ === Person.prototype); // true
+console.log(Person.prototype.__proto__ === Object.prototype); // true
+console.log(Object.prototype.__proto__); // null
+```
+在这个例子中，`person1` 的原型链是：`person1 -> Person.prototype -> Object.prototype -> null`。
+### 总结
+**原型**：对象继承属性和方法的来源。  
+**原型链**：一条链接多个原型对象的链，用于属性和方法的逐层查找，直到找到为止。
 
 ## 前端性能优化
 * 减少请求数量 图片合并 雪碧图 `Base64` 使用字体图标来代替图片

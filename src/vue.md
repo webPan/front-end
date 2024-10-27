@@ -2078,3 +2078,66 @@ onMounted(() => {
 | 代码复用           | 更加灵活，通过函数实现复用         | 通过 `mixins` 或 `extends` 实现 |
 | 性能优化           | 初始化时更高效，组件实例化前运行   | 在组件实例创建后运行            |
 | 迁移成本           | 对 Vue 2 用户可能有学习曲线        | 更贴近传统的 Vue 2 开发模式     |
+
+## Vue的导航守卫
+### 1. 全局导航守卫
+- **beforeEach**：在全局路由发生改变之前触发，常用于登录权限验证等逻辑
+```javascript
+router.beforeEach((to, from, next) => {
+  // 逻辑处理
+  next();
+});
+```
+- **beforeResolve**：在组件内守卫和异步路由组件被解析之后触发，适用于异步数据请求完成后的一些操作。
+```javascript
+router.beforeResolve((to, from, next) => {
+  // 逻辑处理
+  next();
+});
+```
+- **afterEach**：在导航完成后触发，不会影响导航结果，适合用来重置状态等操作。
+```javascript
+router.afterEach((to, from) => {
+  // 操作
+});
+```
+### 2. 路由独享守卫
+**beforeEnter**：在进入某个路由之前调用，仅在配置该路由时有效，常用于该路由独有的验证。
+```javascript
+const routes = [
+  {
+    path: '/about',
+    component: About,
+    beforeEnter: (to, from, next) => {
+      // 逻辑处理
+      next();
+    }
+  }
+];
+```
+### 3. 组件内守卫
+- **beforeRouteEnter**：在进入路由前触发，无法访问组件实例（因为组件尚未创建），可通过 next 回调访问。
+```javascript
+beforeRouteEnter(to, from, next) {
+  next(vm => {
+    // 可以访问组件实例 vm
+  });
+}
+```
+- **beforeRouteUpdate**：在当前路由改变，但组件复用时调用（即路径变化但组件没有被销毁时），可访问组件实例。
+```javascript
+beforeRouteUpdate(to, from, next) {
+  // 可访问组件实例
+  next();
+}
+```
+- **beforeRouteLeave**：在导航离开该组件的路由时调用，常用于提示用户保存未完成的修改。
+```javascript
+beforeRouteLeave(to, from, next) {
+  // 可访问组件实例
+  next();
+}
+```
+
+## 父子组件生命周期执行顺序
+父beforeCreate -> 父created -> 父beforeMount -> 子beforeCreate -> 子created -> 子beforeMount -> 子mounted -> 父mounted

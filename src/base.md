@@ -134,3 +134,8 @@ slice不会改变原数组，但是splice会直接改变原数组。
 ## getElementsByClassName 和 querySelectorAll 的区别
 * `querySelectorAll()`方法是HTML5新增的方法，通过传入一个css选择符，返回所有匹配的元素而不仅仅是一个元素。这个方法返回的是一个NodeList的实例
 * `document.getElementsByClassName`是动态查询的过程，会随着dom结构的变化，得到的结点列表也会发生变化，而`querySelector`得到的是一个静态列表，它不会对dom结构进行动态查询。
+
+## Flex：1 
+- `flex-grow`: 默认值 1，表示元素的放大比例。
+- `flex-shrink`: 默认值 1，表示元素的缩小比例。
+- `flex-basis`: 默认值 0，主轴方向上的初始大小。
