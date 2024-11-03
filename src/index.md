@@ -9,4 +9,7 @@ hero:
     - theme: brand
       text: Get Started
       link: ./base.html
+    - theme: alt
+      text: Top
+      link: ./topic.html
 ---
