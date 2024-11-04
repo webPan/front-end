@@ -1677,6 +1677,81 @@ React 中最常见的问题之一是组件不必要地重新渲染。React 提�
 
 React 的 Fiber 架构通过引入可中断的渲染、优先级调度和增量渲染等机制，显著提升了React在复杂应用中的性能和响应能力。它为开发者提供了更高效的渲染方式，改善了用户体验，特别是在需要高频次交互的应用场景中。
 
+## 事件合成
+事件委托不再绑定到document上，而是绑定到react挂载的容器上，即render方法挂载的容器root。在root的捕获阶段执行react的合成的捕获事件，在root的冒泡阶段执行react的合成的冒泡事件。以react@17.0.1，react-dom@17.0.1为例
+
+```js
+import React from 'react';
+
+class App extends React.Component {
+  parentRef = React.createRef();
+  childRef = React.createRef();
+  constructor(props){
+      super(props)
+    //   document.addEventListener('click', () => {
+    //     console.log('document捕获')
+    //   }, true)
+    //   document.addEventListener('click', () => {
+    //     console.log('document冒泡')
+    //   })
+  }
+  componentDidMount(){
+    this.parentRef.current.addEventListener('click', () => {
+      console.log('父元素原生捕获')
+    }, true)
+    this.parentRef.current.addEventListener('click', () => {
+      console.log('父元素原生冒泡')
+    })
+    this.childRef.current.addEventListener('click', () => {
+      console.log('子元素原生捕获')
+    }, true)
+    this.childRef.current.addEventListener('click', () => {
+      console.log('子元素原生冒泡')
+    })
+    document.addEventListener('click', () => {
+      console.log('document捕获')
+    }, true)
+    document.addEventListener('click', () => {
+      console.log('document冒泡')
+    })
+  }
+
+  parentBubble = () => {
+    console.log('父元素React事件冒泡')
+  }
+  childBubble = () => {
+    console.log('子元素React事件冒泡')
+  }
+  parentCapture = () => {
+    console.log('父元素React事件捕获')
+  }
+  childCapture = () => {
+    console.log('子元素React事件捕获')
+  }
+
+  render(){
+    return (
+      <div ref={this.parentRef} onClick={this.parentBubble} onClickCapture={this.parentCapture}>
+        <p ref={this.childRef} onClick={this.childBubble} onClickCapture={this.childCapture}>
+          事件执行顺序
+        </p>
+      </div>
+    )
+  }
+}
+export default App;
+// 打印顺序：
+// document捕获
+// 父元素React事件捕获
+// 子元素React事件捕获
+// 父元素原生捕获
+// 子元素原生捕获
+// 子元素原生冒泡
+// 父元素原生冒泡
+// 子元素React事件冒泡
+// 父元素React事件冒泡
+// document冒泡
+```
 
 ## 一个完整的react-redux实例
 ```javascript
