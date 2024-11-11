@@ -47,6 +47,28 @@ Vue实例在其生命周期中会触发多个钩子函数，可以让开发者�
   - **描述**：当子组件抛出错误时被调用。这个钩子会捕获从子组件中冒泡上来的错误。
   - **作用**：可以用来报告错误或防止错误使应用崩溃，还可以返回 `false` 以阻止错误继续向上传递。
 
+## vue3 开启KeepAlive存在子组件的生命周期执行顺序
+
+###  组件开启 KeepAlive，页面初次进入
+- `onBeforeMount`: 组件挂载前
+- `onBeforeMount`: 组件挂载前-child
+- `onMounted`: 组件挂载后-child
+- `onActivated` 被激活-child
+- `onMounted`: 组件挂载后
+### 数据更新
+- `watch`: isVisible 变化了，从 true 到 false
+- `onBeforeUpdate`: 数据变化，视图更新前
+- `onUpdated`: 数据变化，视图更新后
+### 组件开启KeepAlive组件被隐藏
+- `onDeactivated` 被停用-child
+### 组件开启KeepAlive组件再次被显示
+- `onActivated` 被激活-child
+###  页面离开时
+- `onBeforeUnmount`: 组件卸载前
+- `onBeforeUnmount`: 组件卸载前-child
+- `onDeactivated` 被停用-child
+- `onUnmounted`: 组件卸载时-child
+- `onUnmounted`: 组件卸载时
 
 
 ## 组件通信
@@ -2183,3 +2205,44 @@ computed: {
 ## 什么是虚拟DOM？如何实现一个虚拟DOM？说说你的思路
 - 很多人认为虚拟 DOM 最大的优势是 diff 算法，减少 JavaScript 操作真实 DOM 的带来的性能消耗。虽然这一个虚拟 DOM 带来的一个优势，但并不是全部。
 - 虚拟 DOM 最大的优势在于抽象了原本的渲染过程，实现了跨平台的能力，而不仅仅局限于浏览器的 DOM，可以是安卓和 IOS 的原生组件，可以是近期很火热的小程序，也可以是各种GUI
+
+## 组件二次封装
+- `$attrs`：属性绑定，它包含了组件所有透传attributes的对象，包括变量、style、事件，利用`v-bind="$attrs"`将属性绑定到组件模板上
+- `$slots`：插槽，它包含父组件所有传入插槽的对象，通过遍历把所有插槽放入到原生组件上
+- `ref`：通过`refInput.value.$.exposed`获取内部组件暴露的方法，利用`getCurrentInstance`获取当前组件实例，再将获取到内部的方法绑定到获取的实例上，`instance.exposed[key] = value`
+
+```html
+<template>
+  <div class="input-wrap">
+    <el-input v-bind="$attrs" ref="refInput">
+      <template v-for="(value, name) in $slots" #[name]>
+        <slot :name="name" />
+      </template>
+    </el-input>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { onMounted, ref, useAttrs, useSlots, getCurrentInstance } from 'vue'
+const attrs = useAttrs()
+const slots = useSlots()
+const refInput = ref()
+const instance = getCurrentInstance()
+onMounted(() => {
+  const entries = Object.entries(refInput.value.$.exposed)
+  for (const [key, value] of entries) {
+    instance!.exposed![key] = value
+  }
+})
+
+defineExpose({
+  test() {
+    console.log('test')
+  }
+})
+
+console.log(Object.keys(slots))
+console.log({ attrs, slots })
+</script>
+```
+

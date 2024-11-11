@@ -85,12 +85,17 @@ map.set(obj,"object对象").set(fun,"function对象").set(window,"Window对象")
 * `some`：一真即真, 只要其中一个为true 就会返回true
 
 ## promise 函数
-* `Promise`是异步编程的一种解决方案
-* `resolve` 把正确的值返回出去
-* `reject` 把错误的值返回出去
-* `then` 接收resolve的回调
-* `catch` 接收reject的回调
-
+### 静态方法
+- `Promise.resolve`： 创建一个状态为 `fulfilled` 的 `Promise`，并将 `value` 作为其结果
+- `Promise.reject`：创建一个状态为 `rejected` 的 `Promise`，并将 `reason` 作为其拒绝的原因
+- `Promise.all(iterable)`：等待所有执行完成，所有的成功才会走then，有一个未成功都走catch，返回接口返回的结果
+- `Promise.allSettled(iterable)`：等待所有执行完成，不管成功与失败都会执行完，都会走then，返回所有结果和status状态
+- `Promise.race(iterable)`：竞赛的意思，有一个返回则立马返回，不管成功与失败
+- `Promise.any(iterable)`：只会收集一个成功的结果，如果有返回成功的会立马返回结果，如果一个成功都没有会走catch，并抛出`AggregateError: All promises were rejected`
+### 实例方法
+- `then`：用于处理 `Promise` 成功的回调
+- `catch`：用于捕获 `Promise` 的错误
+- `finally`：无论 `Promise` 是 `fulfilled` 还是 `rejected`，都会执行 `finally` 中的回调
 ## async 和 await
 * `async` 异步函数,返回的是一个promise 对象，如果要获取到promise 返回值，我们应该用then 方法
 * `await` 写异步代码就像写同步代码一样了，再也没有回调地域

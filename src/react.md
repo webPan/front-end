@@ -1,20 +1,34 @@
-## React 生命周期
-组件的生命周期可分成三个状态：
-* `Mounting`(挂载)：已插入真实 DOM
-* `Updating`(更新)：正在被重新渲染
-* `Unmounting`(卸载)：已移出真实 DOM
-  ![cmd-markdown-logo](./assets/images/react.png)
+## React 18 生命周期
+### 一进入页面就加载的生命周期有
+- `constructor(props)`: 构造函数，初始化 `state` 或绑定事件
+- `getDerivedStateFromProps`: 渲染前根据 `props` 更新 `state`
+- `render`: 渲染组件 UI
+- `componentDidMount`: 组件挂载后调用，适合执行副作用，如网络请求
+### props 更新 state(shouldComponentUpdate返回false)
+- `getDerivedStateFromProps`: 渲染前根据 props 更新 `state`
+### props 更新 state(shouldComponentUpdate返回true)
+- `getDerivedStateFromProps`: 渲染前根据 props 更新 `state`
+- `shouldComponentUpdate`: 控制组件是否重新渲染
+- `render`: 渲染组件 UI
+- `getSnapshotBeforeUpdate`: 在 `render` 后，DOM 更新前获取信息-子组件
+- `getSnapshotBeforeUpdate`: 在 `render` 后，DOM 更新前获取信息
+- `componentDidUpdate`: 组件更新后调用，执行副作用-子组件
+### 组件销毁
+- `componentWillUnmount`: 组件卸载前调用，清理副作用
+### 组件报错
+- `getDerivedStateFromError`: 错误边界，捕获错误并更新状态
+- `componentDidCatch`: 错误边界，捕获并记录错误信息
 
 #### 挂载
-* `componentWillMount`： 在渲染之前执行，用于根组件中的 App 级配置
-* `componentDidMount`：    在第一次渲染之后执行，可以在这里做AJAX请求，DOM 的操作或状态更新以及设置事件监听器。
+* `componentWillMount`：在渲染之前执行，用于根组件中的 App 级配置
+* `componentDidMount`：在第一次渲染之后执行，可以在这里做AJAX请求，DOM 的操作或状态更新以及设置事件监听器。
 #### 更新
-* `componentWillReceiveProps`：    在初始化`render`的时候不会执行，它会在组件接受到新的状态(`Props`)时被触发，一般用于父组件状态更新时子组件的重新渲染
-* `shouldComponentUpdate`：    确定是否更新组件。默认情况下，`它返回true`。如果确定在 `state` 或 `props` 更新后组件不需要在重新渲染，则可以返回`false`，这是一个提高性能的方法。
-* `componentWillUpdate`：    在`shouldComponentUpdate`返回 `true` 确定要更新组件之前件之前执行
-* `componentDidUpdate`：    它主要用于更新DOM以响应`props`或`state`更改
+* `componentWillReceiveProps`：在初始化`render`的时候不会执行，它会在组件接受到新的状态(`Props`)时被触发，一般用于父组件状态更新时子组件的重新渲染
+* `shouldComponentUpdate`：确定是否更新组件。默认情况下，`它返回true`。如果确定在 `state` 或 `props` 更新后组件不需要在重新渲染，则可以返回`false`，这是一个提高性能的方法。
+* `componentWillUpdate`：在`shouldComponentUpdate`返回 `true` 确定要更新组件之前件之前执行
+* `componentDidUpdate`：它主要用于更新DOM以响应`props`或`state`更改
 #### 卸载
-* `componentWillUnmount`:   它用于取消任何的网络请求，或删除与组件关联的所有事件监听器
+* `componentWillUnmount`: 它用于取消任何的网络请求，或删除与组件关联的所有事件监听器
 
 ## React组件通讯
 
@@ -1677,7 +1691,7 @@ React 中最常见的问题之一是组件不必要地重新渲染。React 提�
 
 React 的 Fiber 架构通过引入可中断的渲染、优先级调度和增量渲染等机制，显著提升了React在复杂应用中的性能和响应能力。它为开发者提供了更高效的渲染方式，改善了用户体验，特别是在需要高频次交互的应用场景中。
 
-## 事件合成
+## React事件合成
 事件委托不再绑定到document上，而是绑定到react挂载的容器上，即render方法挂载的容器root。在root的捕获阶段执行react的合成的捕获事件，在root的冒泡阶段执行react的合成的冒泡事件。以react@17.0.1，react-dom@17.0.1为例
 
 ```js
@@ -1752,6 +1766,7 @@ export default App;
 // 父元素React事件冒泡
 // document冒泡
 ```
+[react合成事件与原生事件执行顺序](https://github.com/lizuncong/mini-react/blob/master/docs/%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6/react%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6%E4%B8%8E%E5%8E%9F%E7%94%9F%E4%BA%8B%E4%BB%B6%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F.md)
 
 ## 一个完整的react-redux实例
 ```javascript
