@@ -27,14 +27,11 @@
 
 一句话概述，就是更小更快更友好了
 
-
 ### 更小
 
 `Vue3`移除一些不常用的 `API`
 
 引入`tree-shaking`，可以将无用模块“剪辑”，仅打包需要的，使打包的整体体积变小了
-
-
 
 ### 更快
 
@@ -46,8 +43,6 @@
 - SSR优化
 
 下篇文章我们会进一步介绍
-
-
 
 ### 更友好
 
@@ -82,8 +77,6 @@ function useMouse(){
 
 同时，`VUE3`是基于`typescipt`编写的，可以享受到自动的类型定义提示
 
-
-
 ### 三、优化方案
 
 `vue3`从很多层面都做了优化，可以分成三个方面：
@@ -92,8 +85,6 @@ function useMouse(){
 - 性能
 - 语法 API
 
-
-
 ### 源码
 
 源码可以从两个层面展开：
@@ -101,25 +92,19 @@ function useMouse(){
 - 源码管理
 - TypeScript
 
-
-
 #### 源码管理
 
-`vue3`整个源码是通过 `monorepo `的方式维护的，根据功能将不同的模块拆分到`packages `目录下面不同的子目录中
+`vue3`整个源码是通过 `monorepo`的方式维护的，根据功能将不同的模块拆分到`packages`目录下面不同的子目录中
 
 ![](https://static.vue-js.com/d7c32520-5c58-11eb-ab90-d9ae814b240d.png)
 
 这样使得模块拆分更细化，职责划分更明确，模块之间的依赖关系也更加明确，开发人员也更容易阅读、理解和更改所有模块源码，提高代码的可维护性
 
-另外一些 `package`（比如 `reactivity` 响应式库）是可以独立于 `Vue` 使用的，这样用户如果只想使用 `Vue3 `的响应式能力，可以单独依赖这个响应式库而不用去依赖整个 `Vue`
-
-
+另外一些 `package`（比如 `reactivity` 响应式库）是可以独立于 `Vue` 使用的，这样用户如果只想使用 `Vue3`的响应式能力，可以单独依赖这个响应式库而不用去依赖整个 `Vue`
 
 #### TypeScript
 
 `Vue3`是基于`typeScript`编写的，提供了更好的类型检查，能支持复杂的类型推导
-
-
 
 ### 性能
 
@@ -131,7 +116,7 @@ function useMouse(){
 
 这里讲述数据劫持：
 
-在`vue2`中，数据劫持是通过`Object.defineProperty `，这个 API 有一些缺陷，并不能检测对象属性的添加和删除
+在`vue2`中，数据劫持是通过`Object.defineProperty`，这个 API 有一些缺陷，并不能检测对象属性的添加和删除
 
 ```js
 Object.defineProperty(data, 'a',{
@@ -144,7 +129,7 @@ Object.defineProperty(data, 'a',{
 })
 ```
 
-尽管` Vue`为了解决这个问题提供了 `set `和`delete `实例方法，但是对于用户来说，还是增加了一定的心智负担
+尽管`Vue`为了解决这个问题提供了 `set`和`delete`实例方法，但是对于用户来说，还是增加了一定的心智负担
 
 同时在面对嵌套层级比较深的情况下，就存在性能问题
 
@@ -164,9 +149,7 @@ default {
 
 相比之下，`vue3`是通过`proxy`监听整个对象，那么对于删除还是监听当然也能监听到
 
-同时`Proxy ` 并不能监听到内部深层次的对象变化，而 `Vue3` 的处理方式是在` getter` 中去递归响应式，这样的好处是真正访问到的内部对象才会变成响应式，而不是无脑递归
-
-
+同时`Proxy` 并不能监听到内部深层次的对象变化，而 `Vue3` 的处理方式是在`getter` 中去递归响应式，这样的好处是真正访问到的内部对象才会变成响应式，而不是无脑递归
 
 ### 语法 API
 
@@ -175,19 +158,13 @@ default {
 - 优化逻辑组织
 - 优化逻辑复用
 
-
-
 #### 逻辑组织
 
-一张图，我们可以很直观地感受到 `Composition API `在逻辑组织方面的优势
+一张图，我们可以很直观地感受到 `Composition API`在逻辑组织方面的优势
 
 ![](https://static.vue-js.com/e5804bc0-5c58-11eb-85f6-6fac77c0c9b3.png)
 
-
-
 相同功能的代码编写在一块，而不像`options API`那样，各个功能的代码混成一块
-
-
 
 #### 逻辑复用
 
@@ -234,8 +211,6 @@ export default {
 
 ![](https://static.vue-js.com/2aac1020-5ed0-11eb-ab90-d9ae814b240d.png)
 
-
-
 ### 一、编译阶段
 
 回顾`Vue2`，我们知道每个组件实例都对应一个 `watcher` 实例，它会在组件渲染的过程中把用到的数据`property`记录为依赖，当依赖发生改变，触发`setter`，则会通知`watcher`，从而使关联的组件重新渲染
@@ -266,8 +241,6 @@ export default {
 - 事件监听缓存
 - SSR优化
 
-
-
 #### diff算法优化
 
 `vue3`在`diff`算法中相比`vue2`增加了静态标记
@@ -297,8 +270,6 @@ export const enum PatchFlags {
   BAIL = -2 // 一个特殊的标志，指代差异算法
 }
 ```
-
-
 
 #### 静态提升
 
@@ -342,8 +313,6 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 
 同时 `_hoisted_1` 被打上了 `PatchFlag` ，静态标记值为 -1 ，特殊标志是负整数表示永远不会用于 Diff
 
-
-
 #### 事件监听缓存
 
 默认情况下绑定事件行为会被视为动态绑定，所以每次都会去追踪它的变化
@@ -379,21 +348,19 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 
 上述发现开启了缓存后，没有了静态标记。也就是说下次`diff`算法的时候直接使用
 
-
-
 #### SSR优化
 
 当静态内容大到一定量级时候，会用`createStaticVNode`方法在客户端去生成一个static node，这些静态`node`，会被直接`innerHtml`，就不需要创建对象，然后根据对象渲染
 
 ```js
 div>
-	<div>
-		<span>你好</span>
-	</div>
-	...  // 很多个静态属性
-	<div>
-		<span>{{ message }}</span>
-	</div>
+ <div>
+  <span>你好</span>
+ </div>
+ ...  // 很多个静态属性
+ <div>
+  <span>{{ message }}</span>
+ </div>
 </div>
 ```
 
@@ -412,8 +379,6 @@ export function ssrRender(_ctx, _push, _parent, _attrs, $props, $setup, $data, $
   }</span></div></div>`)
 }
 ```
-
-
 
 ### 二、源码体积
 
@@ -442,8 +407,6 @@ export default defineComponent({
 });
 ```
 
-
-
 ### 三、响应式系统
 
 `vue2`中采用 `defineProperty`来劫持整个对象，然后进行深度遍历所有属性，给每个属性添加`getter`和`setter`，实现响应式
@@ -454,13 +417,9 @@ export default defineComponent({
 - 可以监听到数组的索引和数组`length`属性
 - 可以监听删除属性
 
-
-
 ## Vue3.0里为什么要用 Proxy API 替代 defineProperty API ？
 
 ![](https://static.vue-js.com/57aa5c80-5f7f-11eb-ab90-d9ae814b240d.png)
-
-
 
 ### 一、Object.defineProperty
 
@@ -595,8 +554,6 @@ arrDate[0] = 99 // ok
 - 数组`API`方法无法监听到
 - 需要对每个属性进行遍历监听，如果嵌套对象，需要深层监听，造成性能问题
 
-
-
 ### 二、proxy
 
 `Proxy`的监听是针对一个对象的，那么对这个对象的所有操作会进入监听操作，这就完全可以代理所有属性了
@@ -678,7 +635,6 @@ function reactive(obj) {
     return observed
 }
 ```
-
 
 ### 三、总结
 
@@ -786,8 +742,6 @@ import { nextTick, observable } from 'vue'
 nextTick(() => {})
 ```
 
-
-
 ### 二、如何做
 
 `Tree shaking`是基于`ES6`模板语法（`import`与`exports`），主要是借助`ES6`模块的静态编译思想，在编译时就能确定模块的依赖关系，以及输入和输出的变量
@@ -847,8 +801,6 @@ export default {
 
 ![](https://static.vue-js.com/7c29e260-6097-11eb-ab90-d9ae814b240d.png)
 
-
-
 ### Vue3 项目
 
 组件中简单使用
@@ -902,8 +854,6 @@ export default defineComponent({
 再次对项目进行打包，可以看到在引入`computer`和`watch`之后，项目整体体积变大了
 
 ![](https://static.vue-js.com/b36a7a00-6097-11eb-85f6-6fac77c0c9b3.png)
-
-
 
 ### 三、作用
 

@@ -1,209 +1,377 @@
-## 双向绑定proxy和defineProperty
-defineProperty 数据劫持比较好理解,通常我们利用Object.defineProperty劫持对象的访问器,在属性值发生变化时我们可以获取变化
-```javascript
-var data = {
-        k:''
-    }
-    Object.defineProperty(data,'k',{
-        enumerable:true,
-        configurable:true,
-        get:function(){//获取data.k值时会被打印
-            console.log('data.k的值被获取了')
-        },
-        set:function(){//改变data.k值时会被打印
-            console.log('data.k的值被改变了')
-        }
-    })
 
-    data.k = 1;
-    data.k;
-```
-缺陷：无法监听数组变化
+## JavaScript 事件循环机制是什么？
+
+### 事件循环的核心概念
+
+1. 执行栈：同步代码执行的地方
+2. 任务队列：
+   - 宏任务（macrotask）：setTimeout, setInterval, I/O, UI渲染
+   - 微任务（microtask）：Promise.then, process.nextTick, MutationObserver
+
+### 执行顺序示例
 
 ```javascript
-var data = {
-        k:''
-    }
-    let newData = new Proxy(data,{
-        get:function(){//获取data.k值时会被打印
-            console.log('data.k的值被获取了')
-        },
-        set:function(){//改变data.k值时会被打印
-            console.log('data.k的值被改变了')
-        }
-    })
-    newData.k = 1;
-    newData.k;
-```
-Proxy返回的是一个新对象,我们可以只操作新的对象达到目的,而Object.defineProperty只能遍历对象属性直接修改。  
-[参考](https://www.jianshu.com/p/2df6dcddb0d7)
+console.log('1');  // 同步任务
 
-## 页面监控
-* 数据采集 --> 数据上报 --> 服务端处理 --> 数据库存储 --> 数据监控可视化平台
-* `Performance` 接口可以获取到当前页面中与性能相关的信息，它是 `High Resolution Time API` 的一部分，同时也融合了 `Performance` `Timeline API`、`Navigation Timing API`、 `User Timing API` 和 `Resource Timing API`。
+setTimeout(() => {
+  console.log('2');  // 宏任务
+}, 0);
 
-## JavaScript 事件循环（简单版）
+Promise.resolve().then(() => {
+  console.log('3');  // 微任务
+});
 
-1. **执行顺序**：JavaScript 是单线程的，执行顺序分成**同步任务**和**异步任务**。
-2. **调用栈**：同步任务会直接按顺序进入调用栈执行。
-3. **任务队列**：异步任务会进入任务队列，分为**微任务队列**和**宏任务队列**。
-    - 微任务：优先级高，如 `Promise.then`、`queueMicrotask`。
-    - 宏任务：优先级低，如 `setTimeout`、`setInterval`。
-4. **事件循环**：每次调用栈清空后，事件循环会**先执行所有微任务**，再执行一个宏任务，循环往复。
+console.log('4');  // 同步任务
 
----
-
-### 示例代码
-
-```javascript
-console.log("同步 1");
-
-setTimeout(() => console.log("宏任务 1"), 0);
-
-Promise.resolve().then(() => console.log("微任务 1"));
-
-console.log("同步 2");
+// 输出顺序：1 -> 4 -> 3 -> 2
 ```
 
-## 深拷贝和浅拷贝
-浅拷贝只复制指向某个对象的指针，而不复制对象本身，新旧对象还是共享同一块内存  
-深拷贝会另外创造一个一模一样的对象，新对象跟原对象不共享内存，修改新对象不会改到原对象。  
+**执行规则**：
+
+1. 执行同步代码
+2. 清空微任务队列
+3. 执行一个宏任务
+4. 重复步骤2-3
+
+## 深拷贝和浅拷贝有什么区别？
+
+### 核心区别
+
+1. 浅拷贝：只复制对象的第一层属性，引用类型的属性仍指向原始引用
+2. 深拷贝：递归复制对象的所有层级，创建全新的数据副本
+
+### 实现方式与示例
+
+**浅拷贝实现方式**：
+
 ```javascript
-//深拷贝
-function deepClone(obj, map = new WeakMap()) {
-    // 基本类型直接返回
-    if (obj === null || typeof obj !== 'object') {
-        return obj;
-    }
+// 方法1：Object.assign
+const obj = { a: 1, b: { c: 2 } };
+const shallowCopy1 = Object.assign({}, obj);
+
+// 方法2：展开运算符
+const shallowCopy2 = { ...obj };
+```
+
+**深拷贝实现方式**：
+
+```javascript
+// 完整的深拷贝实现
+function deepClone(obj, hash = new WeakMap()) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj instanceof Date) return new Date(obj);
+    if (obj instanceof RegExp) return new RegExp(obj);
+    
     // 处理循环引用
-    if (map.has(obj)) {
-        return map.get(obj);
-    }
-    // 处理日期和正则
-    if (obj instanceof Date) {
-        return new Date(obj);
-    }
-    if (obj instanceof RegExp) {
-        return new RegExp(obj);
-    }
-    // 创建对象副本
-    const clone = Array.isArray(obj) ? [] : {};
-    map.set(obj, clone); // 存储引用以处理循环引用
-    // 递归复制属性
+    if (hash.has(obj)) return hash.get(obj);
+    
+    const cloneObj = Array.isArray(obj) ? [] : {};
+    hash.set(obj, cloneObj);
+    
     for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
-            clone[key] = deepClone(obj[key], map);
+            cloneObj[key] = deepClone(obj[key], hash);
         }
     }
-    return clone;
+    return cloneObj;
 }
 ```
-## 原型和原型链
 
-在 JavaScript 中，**原型**和**原型链**是对象继承的重要概念。理解这两个概念可以帮助我们更好地理解 JavaScript 的继承机制。
+## JavaScript 原型链是什么？
 
-### 1. 原型（Prototype）
+### 核心概念
 
-每个 JavaScript 对象都有一个特殊的属性 `__proto__`，它指向该对象的**原型**，即另一个对象。这个**原型对象**包含了该对象可以继承的属性和方法。
+1. 原型（prototype）：对象的模板，包含可以被继承的属性和方法
+2. 原型链：对象通过 **proto** 属性连接的查找链条
 
-通常，通过构造函数创建的对象，其原型就是该构造函数的 `prototype` 属性指向的对象。例如：
+### 原理与示例
 
 ```javascript
-function Person(name) {
-  this.name = name;
+// 构造函数
+function Animal(name) {
+    this.name = name;
 }
-Person.prototype.sayHello = function() {
-  console.log("Hello, " + this.name);
+
+// 原型方法
+Animal.prototype.sayName = function() {
+    console.log(this.name);
 };
 
-const person1 = new Person("Alice");
-person1.sayHello();  // 输出: "Hello, Alice"
-```
-在上面的代码中，`person1` 通过 `__proto__` 继承了 `Person.prototype` 上的 `sayHello` 方法。
+// 创建实例
+const cat = new Animal('猫咪');
 
-### 2. 原型链（Prototype Chain）
-`JavaScript` 的对象是通过原型链来实现继承的。当访问一个对象的属性或方法时，`JavaScript` 会首先在对象自身查找，如果找不到，就会沿着对象的 `__proto__` 链向上查找，直到找到该属性或方法，或者到达 `null` 结束。这条链接所有原型对象的链条就称为原型链。
+// 原型链查找过程
+console.log(cat.__proto__ === Animal.prototype);         // true
+console.log(Animal.prototype.__proto__ === Object.prototype); // true
+console.log(Object.prototype.__proto__ === null);        // true
+```
+
+**原型链特点**：
+
+1. 属性查找顺序：实例 -> 构造函数原型 -> Object.prototype -> null
+2. 所有对象都继承自 Object.prototype
+3. 原型链的终点是 null
+
+## 如何优化前端首屏加载速度？
+
+### 核心优化策略
+
+1. 资源优化
+   - 路由懒加载
+   - 组件按需加载
+   - 图片懒加载
+   - 资源压缩
+
+2. 缓存优化
+   - 浏览器缓存
+   - CDN缓存
+   - Service Worker
+
+3. 渲染优化
+   - 服务端渲染(SSR)
+   - 静态页面预渲染
+   - 骨架屏
+
+### 代码实现示例
+
 ```javascript
-console.log(person1.__proto__ === Person.prototype); // true
-console.log(Person.prototype.__proto__ === Object.prototype); // true
-console.log(Object.prototype.__proto__); // null
+// 路由懒加载
+const routes = [
+  {
+    path: '/user',
+    component: () => import('./views/User.vue')
+  }
+];
+
+// 组件按需加载
+import { Button } from 'element-ui';
+Vue.use(Button);
+
+// 图片懒加载
+<img v-lazy="imageUrl">
+
+// Gzip压缩配置
+const CompressionPlugin = require('compression-webpack-plugin');
+module.exports = {
+  configureWebpack: {
+    plugins: [
+      new CompressionPlugin({
+        test: /\.(js|css|html)$/,
+        threshold: 10240
+      })
+    ]
+  }
+};
 ```
-在这个例子中，`person1` 的原型链是：`person1 -> Person.prototype -> Object.prototype -> null`。
-### 总结
-**原型**：对象继承属性和方法的来源。  
-**原型链**：一条链接多个原型对象的链，用于属性和方法的逐层查找，直到找到为止。
 
-## 前端性能优化
-* 减少请求数量 图片合并 雪碧图 `Base64` 使用字体图标来代替图片
-* 减少重定向 使用缓存 不使用`CSS @import` 避免使用空的`src`和`href`
-* 减小资源大小 `js/css/html/img`
-* 优化网络连接 使用CDN 使用DNS预解析
-* 优化资源加载 资源加载位置 资源加载时机
-* 减少重绘回流 防抖和节流 及时清理环境
-* 性能更好的API 用对选择器 使用`requestAnimationFrame`来替代`setTimeout`和`setInterval` 使用`IntersectionObserver`来实现图片可视区域的懒加载 使用`web worker`
-* `webpack`优化 动态导入和按需加载 剔除无用代码 长缓存优化
+**优化效果衡量**：
 
-## SPA首屏加载速度慢怎么解决
+1. 首屏时间（FCP）降低到 1.5s 以内
+2. 页面完全可交互时间（TTI）控制在 3s 以内
+3. 核心资源大小控制在 200KB 以内
 
-1. ### 减小入口文件体积  
-常用的手段是路由懒加载，把不同路由对应的组件分割成不同的代码块，待路由被请求的时候会单独打包路由，使得入口文件变小，加载速度大大增加
+## 前端性能优化有哪些方案？
 
-2. ### UI框架按需加载
-在日常使用UI框架，例如element-UI、或者antd，我们经常性直接饮用整个UI库
+### 核心优化方向
+
+1. **网络传输优化**
+   - HTTP请求优化
+   - 资源压缩
+   - 缓存策略
+
+2. **页面渲染优化**
+   - CSS/JS 优化
+   - DOM 操作优化
+   - 回流重绘优化
+
+3. **代码层面优化**
+   - 代码分割
+   - 树摇优化
+   - 延迟加载
+
+### 具体实现方案
+
 ```javascript
-import ElementUI from 'element-ui'
-Vue.use(ElementUI)
-```
-但实际上我用到的组件只有按钮，分页，表格，输入与警告 所以我们要按需引用
-```javascript
-import { Button, Input, Pagination, Table, TableColumn, MessageBox } from 'element-ui';
-Vue.use(Button)
-Vue.use(Input)
-Vue.use(Pagination)
-```
-### 3. 组件重复打包
-假设A.js文件是一个常用的库，现在有多个路由使用了A.js文件，这就造成了重复下载
-解决方案：在webpack的config文件中，修改CommonsChunkPlugin的配置
-```javascript
-minChunks: 3
-```
-`minChunks`为3表示会把使用3次及以上的包抽离出来，放进公共依赖文件，避免了重复加载组件
-
-### 4. 图片资源的压缩
-图片资源虽然不在编码过程中，但它却是对页面性能影响最大的因素
-对于所有的图片资源，我们可以进行适当的压缩
-对页面上使用到的`icon`，可以使用在线字体图标，或者雪碧图，将众多小图标合并到同一张图上，用以减轻`http`请求压力。
-
-### 5. 开启GZip压缩
-拆完包之后，我们再用`gzip`做一下压缩 安装`compression-webpack-plugin`
-```bash
-cnmp i compression-webpack-plugin -D
-```
-在`vue.congig.js`中引入并修改`webpack`配置
-```javascript
-const CompressionPlugin = require('compression-webpack-plugin')
-
-configureWebpack: (config) => {
-    if (process.env.NODE_ENV === 'production') {
-        // 为生产环境修改配置...
-        config.mode = 'production'
-        return {
-            plugins: [new CompressionPlugin({
-                test: /\.js$|\.html$|\.css/, //匹配文件名
-                threshold: 10240, //对超过10k的数据进行压缩
-                deleteOriginalAssets: false //是否删除原文件
-            })]
-        }
+// 1. 资源合并压缩
+// webpack配置
+module.exports = {
+  optimization: {
+    minimize: true,
+    splitChunks: {
+      chunks: 'all'
     }
+  }
+}
+
+// 2. 图片懒加载
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      img.src = img.dataset.src;
+      observer.unobserve(img);
+    }
+  });
+});
+
+// 3. 防抖函数
+function debounce(fn, delay) {
+  let timer = null;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  }
 }
 ```
-在服务器我们也要做相应的配置 如果发送请求的浏览器支持gzip，就发送给它gzip格式的文件 我的服务器是用express框架搭建的 只要安装一下compression就能使用
+
+**关键优化点**：
+
+1. 减少HTTP请求：合并文件、雪碧图、base64编码
+2. 使用缓存：浏览器缓存、CDN缓存、Service Worker
+3. 压缩资源：Gzip、图片压缩、代码压缩
+4. 代码优化：代码分割、树摇、延迟加载
+5. 预加载：资源预加载、DNS预解析
+
+## 前端安全问题有哪些？如何防范？
+
+### 主要安全问题
+
+1. **XSS攻击**（跨站脚本攻击）
+2. **CSRF攻击**（跨站请求伪造）
+3. **点击劫持**
+4. **SQL注入**
+5. **密码安全**
+
+### 防范措施与示例
+
 ```javascript
-const compression = require('compression')
-app.use(compression())  // 在其他中间件使用之前调用
+// 1. XSS防范
+// 转义HTML字符
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, (match) => {
+    const escape = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return escape[match];
+  });
+}
+
+// 2. CSRF防范
+// 添加CSRF Token
+const csrfToken = Math.random().toString(36).slice(2);
+fetch('/api/data', {
+  headers: {
+    'X-CSRF-Token': csrfToken
+  }
+});
+
+// 3. 点击劫持防范
+// 设置HTTP Header
+response.setHeader('X-Frame-Options', 'SAMEORIGIN');
 ```
-### 6. 使用SSR
-SSR（Server side ），也就是服务端渲染，组件或页面通过服务器生成html字符串，再发送到浏览器
 
-从头搭建一个服务端渲染是很复杂的，vue应用建议使用`Nuxt.js`实现服务端渲染
+**安全最佳实践**：
 
+1. 输入验证和转义
+2. 使用HTTPS
+3. 实施CSP（内容安全策略）
+4. 使用安全的Cookie属性
+5. 定期更新依赖包
+
+## 浏览器缓存机制是什么？
+
+### 缓存分类
+
+1. **强缓存**
+   - Cache-Control
+   - Expires
+
+2. **协商缓存**
+   - Last-Modified / If-Modified-Since
+   - ETag / If-None-Match
+
+### 实现机制与示例
+
+```javascript
+// 服务器端设置缓存头
+app.get('/api/data', (req, res) => {
+  // 设置强缓存
+  res.setHeader('Cache-Control', 'max-age=3600');
+  
+  // 设置协商缓存
+  const etag = generateETag(data);
+  res.setHeader('ETag', etag);
+  
+  if (req.headers['if-none-match'] === etag) {
+    res.status(304).end();
+  } else {
+    res.json(data);
+  }
+});
+```
+
+**缓存策略选择**：
+
+1. 频繁变动的资源：使用协商缓存
+2. 静态资源：使用强缓存
+3. 不需要缓存的资源：Cache-Control: no-store
+4. API响应：根据业务需求选择合适的缓存策略
+
+### 缓存流程图
+
+```mermaid
+graph TD
+    A[浏览器请求资源] --> B{是否有缓存?}
+    B -->|是| C{检查强缓存}
+    B -->|否| G[向服务器请求]
+    C -->|未过期| D[使用强缓存]
+    C -->|已过期| E{检查协商缓存}
+    E -->|未修改| F[使用协商缓存]
+    E -->|已修改| G
+    G --> H[返回新资源]
+```
+
+# 高级
+
+## 前端性能监控应该关注哪些指标？
+
+### 核心性能指标
+
+1. 页面加载指标
+   - FCP (First Contentful Paint): 首次内容绘制
+   - LCP (Largest Contentful Paint): 最大内容绘制
+   - TTI (Time to Interactive): 可交互时间
+
+2. 用户体验指标
+   - FID (First Input Delay): 首次输入延迟
+   - CLS (Cumulative Layout Shift): 累积布局偏移
+
+3. 资源加载指标
+   - 资源加载时间
+   - 资源大小
+   - 请求数量
+
+### 监控实现方式
+
+```javascript
+// 使用 Performance API 获取性能指标
+const performance = window.performance;
+
+// 获取页面加载时间
+const timing = performance.timing;
+const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
+
+// 使用 PerformanceObserver 监听性能指标
+new PerformanceObserver((entryList) => {
+  const entries = entryList.getEntries();
+  entries.forEach(entry => {
+    console.log(`${entry.name}: ${entry.startTime}ms`);
+  });
+}).observe({ entryTypes: ['paint', 'largest-contentful-paint'] });
+```

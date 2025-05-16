@@ -33,6 +33,7 @@
 * `Webkit`内核：`Safari,Chrome`等。
 
 ## 简单介绍对浏览器内核的理解
+
 主要分成两部分：渲染引擎和JS引擎。
 
 * 渲染引擎：将代码转换成页面。负责取得网页的内容（HTML、XML、图像等等）、整理讯息（例如加入CSS等）、以及计算网页的显示方式，然后会输出至显示器或打印机。浏览器的内核的不同对于网页的语法解释会有不同，所以渲染的效果也不相同。所有网页浏览器、电子邮件客户端以及其他需要编辑、显示网络内容的应用程序都需要内核。
@@ -41,24 +42,29 @@
 最开始渲染引擎和JS引擎并没有区分得很明确，后来JS引擎越来越独立，内核就倾向于只指渲染引擎。
 
 ## src和href的区别
+
 * src是指向外部资源的位置，指向的内容会嵌入到文档中当前标签所在的位置，在请求src资源时会将其指向的资源下载并应用到文档内，如js脚本，img图片和frame等元素。当浏览器解析到该元素时，会暂停其他资源的下载和处理，知道将该资源加载、编译、执行完毕，所以一般js脚本会放在底部而不是头部。
 * href是指网络资源所在位置，建立和当前元素（锚点）或当前文档（链接）之间的链接，用于超链接。
 
 ## 选择器优先级
+
 !important>行内样式>id选择器>类选择器>标签选择器>通配符>继承
 
 ## HTML5新标签
+
 `header` `footer` `main` `nav` `aside` `article` `figcaption` `figure` `progress` `dialog` `bdi` `details`  `mark` `menuitem` `meter`  `rp` `rt` `ruby` `section` `summary` `time` `wbr`
 
 ## CSS 布局
 
 #### 两栏布局(左侧宽度固定，右侧自适应)
+
 * `float + margin`
 * `float + overflow`
 * `float + position`
 * `flex`
 
 #### 三栏布局(两边固定中间自适应)
+
 * `float + margin`
 * `position + margin`
 * `flex`
@@ -66,19 +72,25 @@
 [布局参考](https://www.cnblogs.com/xuepei/p/9990553.html)
 
 ## CSS 盒模型
+
 #### W3C
+
 `margin + border + padding + content`
 ![W3C](./assets/images/w3c.jpg)
+
 #### IE
+
 `margin + content` (content里面包含了padding border)
 ![IE](./assets/images/ie.jpg)
 
 ## cookie、localstorage、sessionstorage 的区别
+
 ![本地存储](./assets/images/csl.png)
 
-
 ## array方法有哪些
-#### 不会改变原来数组的有：
+
+#### 不会改变原来数组的有
+
 * `concat`：连接两个或更多的数组，并返回结果。
 * `every`：检测数组元素的每个元素是否都符合条件。
 * `some` ：检测数组元素中是否有元素符合指定条件。
@@ -90,7 +102,9 @@
 * `map` ：通过指定函数处理数组的每个元素，并返回处理后的数组。
 * `slice` ：选取数组的的一部分，并返回一个新数组。
 * `valueOf` ：返回数组对象的原始值。
-#### 会改变原来数组的有：
+
+#### 会改变原来数组的有
+
 * `pop` ：删除数组的最后一个元素并返回删除的元素。
 * `push` ：向数组的末尾添加一个或更多元素，并返回新的长度。
 * `shift`： 删除并返回数组的第一个元素。
@@ -104,9 +118,11 @@ slice不会改变原数组，但是splice会直接改变原数组。
 :::
 
 ## get 和 post 的区别
+
 ![get 和 post 的区别](./assets/images/get-post.png)
 
 ## 8种数据类型
+
 * `Number`：typeof instance === "number"
 * `String`：typeof instance === "string
 * `Boolean`：typeof instance === "boolean"
@@ -118,6 +134,7 @@ slice不会改变原数组，但是splice会直接改变原数组。
 * `Symbol` ：typeof instance === "symbol"
 
 ## javascript内置对象有哪些
+
 * `String`： 字符串对象
 * `Array` ：数组
 * `Boolean`： 布尔对象
@@ -130,12 +147,15 @@ slice不会改变原数组，但是splice会直接改变原数组。
 * `Math`： 数学对象
 * `RegExp` ：正则表达式对象
 
-
 ## getElementsByClassName 和 querySelectorAll 的区别
+
 * `querySelectorAll()`方法是HTML5新增的方法，通过传入一个css选择符，返回所有匹配的元素而不仅仅是一个元素。这个方法返回的是一个NodeList的实例
 * `document.getElementsByClassName`是动态查询的过程，会随着dom结构的变化，得到的结点列表也会发生变化，而`querySelector`得到的是一个静态列表，它不会对dom结构进行动态查询。
 
-## Flex：1 
-- `flex-grow`: 默认值 1，表示元素的放大比例。
-- `flex-shrink`: 默认值 1，表示元素的缩小比例。
-- `flex-basis`: 默认值 0，主轴方向上的初始大小。
+## Flex：1
+
+* `flex-grow`: 默认值 1，表示元素的放大比例，即如果存在剩余空间，该项目将放大。
+* `flex-shrink`: 默认值 1，表示元素的缩小比例，即如果空间不足，该项目将缩小。
+* `flex-basis`: 默认值 0，主轴方向上的初始大小。
+
+[参考资料](https://github.com/Advanced-Frontend/Daily-Interview-Question/issues/380)
