@@ -21,11 +21,9 @@ export default defineConfig({
       { text: 'Vue', link: '/vue.html' },
       { text: 'Vue3', link: '/vue3.html' },
       { text: '移动端', link: '/mobile.html' },
-      { text: 'Es6', link: '/es6.html' },
-      { text: '原理', link: '/principle.html' },
-      { text: '算法', link: '/algorithm.html' },
       { text: '打包工具', link: '/packaging-tools.html' },
-      { text: '经典博文', link: '/blog.html' },
+      { text: '算法', link: '/algorithm.html' },
+      { text: '博文', link: '/blog.html' },
     ],
     socialLinks: [
       { icon: 'github', link: 'https://github.com/webPan' }

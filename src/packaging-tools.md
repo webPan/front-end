@@ -67,32 +67,6 @@
 - 部分旧工具可能不完全兼容
 - 学习曲线相对较陡
 
-## Virtual DOM 真的比操作原生 DOM 快吗？谈谈你的想法
-
-**Virtual DOM 不一定比直接操作原生 DOM 快，它的优势在于：**
-
-1. **批量更新优化**
-   - Virtual DOM 会将多次操作合并成一次真实 DOM 更新
-   - 减少浏览器重排重绘的次数
-
-2. **跨平台**
-   - 可以适配不同平台（Web、Native、小程序等）
-   - 提供统一的开发模式
-
-3. **开发体验**
-   - 声明式编程
-   - 不用直接操作 DOM，代码更容易维护
-   - 状态驱动视图，逻辑更清晰
-
-**性能对比：**
-
-- 直接操作 DOM：适合简单、频率低的更新
-- Virtual DOM：适合复杂、频繁的更新场景
-
-**结论：**
-Virtual DOM 的价值不在于性能，而在于它能够提供更好的开发体验和可维护性，同时通过批量更新优化来保证可接受的性能表现。
-
-如果要追求极致性能，针对性的原生 DOM 操作可能会更快，但会牺牲开发效率和代码可维护性。
 
 ## 说说webpack和vite有什么区别？他们打包和热更新机制是怎样的
 
@@ -142,12 +116,7 @@ Virtual DOM 的价值不在于性能，而在于它能够提供更好的开发�
 - Vite：开发体验更好，启动和热更新更快
 - 选择：新项目推荐 Vite，老项目可继续使用 Webpack
 
-## Loader 和 Plugin它们的区别和实现原理是什么？
 
-- `Loader`：转换器，处理文件
-- `Plugin`：扩展器，干预打包过程
-- 常见 Loader：`babel-loader`, `css-loader`, `file-loader`,`url-loader`
-- 常见 Plugin：`HtmlWebpackPlugin`, `CleanWebpackPlugin`
 
 ## Webpack 的打包原理是什么？
 
@@ -170,46 +139,20 @@ Virtual DOM 的价值不在于性能，而在于它能够提供更好的开发�
    - 生成最终的 bundle 文件
    - 注入运行时代码（模块加载、依赖关系处理）
 
-**核心原理示意：**
-
-```javascript
-// 简化后的打包结果
-(function(modules) {
-  // 模块缓存
-  var installedModules = {};
-  
-  // 模块加载函数
-  function __webpack_require__(moduleId) {
-    // 检查缓存
-    if(installedModules[moduleId]) {
-      return installedModules[moduleId].exports;
-    }
-    
-    // 创建新模块
-    var module = installedModules[moduleId] = {
-      i: moduleId,
-      exports: {}
-    };
-    
-    // 执行模块函数
-    modules[moduleId].call(
-      module.exports,
-      module,
-      module.exports,
-      __webpack_require__
-    );
-    
-    return module.exports;
-  }
-  
-  // 加载入口模块
-  return __webpack_require__("./src/index.js");
-})({
-  "./src/index.js": function(module, exports, __webpack_require__) {
-    // 模块代码
-  },
-  // 其他模块...
-});
-```
-
 **简单来说：** Webpack 通过分析入口文件，收集依赖，转换模块，最后将所有模块打包成一个或多个 bundle，并注入自己的加载机制。
+
+### 什么是loader
+
+- loader是文件加载器，能够加载资源文件，并对这些文件进行一些处理，诸如编译、压缩等，最终一起打包到指定的文件中
+- 处理一个文件可以使用多个loader，loader的执行顺序和配置中的顺序是相反的，即最后一个loader最先执行，第一个loader最后执行
+第一个执行的loader接收源文件内容作为参数，其它loader接收前一个执行的loader的返回值作为参数，最后执行的loader会返回此模块的JavaScript源码
+- 例子：`babel-loader`、`css-loader`、`file-loader`
+
+### 什么是plugin
+
+在webpack运行的生命周期中会广播出许多事件，plugin可以监听这些事件，在合适的时机通过webpack提供的API改变输出结果。
+- 例子：`HtmlWebpackPlugin`、`DefinePlugin`、`MiniCssExtractPlugin`
+
+### loader和plugin的区别
+- `loader`它是一个转换器，将A文件进行编译形成B文件，这里操作的是文件，比如将A.scss转换为A.css，单纯的文件转换过程  
+- `plugin`是一个扩展器，它丰富了webpack本身，针对是loader结束后，webpack打包的整个过程，它并不直接操作文件，而是基于事件机制工作，会监听webpack打包过程中的某些节点，执行广泛的任务

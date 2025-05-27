@@ -1,7 +1,5 @@
 
-## React 18的生命周期方法有哪些？它们在什么时候被调用？
-
-### React 18中主要的生命周期方法及其调用时机
+### React 18 生命周期方法有哪些？各自何时触发？
 
 - **挂载阶段**：组件首次渲染到DOM时
   - `constructor()`：初始化state和绑定方法
@@ -132,7 +130,7 @@ class ErrorBoundary extends React.Component {
 }
 ```
 
-## React中的state和props有什么区别？
+## state 和 props 有什么区别？
 
 ### state和props的主要区别
 
@@ -493,7 +491,7 @@ function TextInputWithFocus() {
 }
 ```
 
-## React的虚拟DOM是什么？它如何提升性能？
+## 什么是虚拟DOM？它如何提升性能？
 
 ### 虚拟DOM的核心概念
 
