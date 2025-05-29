@@ -10,9 +10,9 @@
 - 主进程（Main Process）运行在 Node.js 环境中，拥有操作系统级别的 API 权限，负责创建和管理所有渲染进程（即窗口）。
 - 渲染进程（Renderer Process）运行在 Chromium 环境中，主要负责渲染页面和处理用户交互，每个窗口对应一个渲染进程。
 
-**示例代码：**  
-主进程（main.js）：
+::: details 示例代码
 
+主进程（main.js）：
 ```js
 const { app, BrowserWindow } = require('electron');
 app.whenReady().then(() => {
@@ -20,6 +20,7 @@ app.whenReady().then(() => {
   win.loadFile('index.html');
 });
 ```
+
 
 渲染进程（index.html + renderer.js）：
 
@@ -32,8 +33,7 @@ app.whenReady().then(() => {
 // renderer.js
 console.log('这是渲染进程');
 ```
-
----
+:::
 
 ## 如何在 Electron 中实现主进程与渲染进程之间的通信？常用的通信方式有哪些？
 
@@ -46,7 +46,8 @@ console.log('这是渲染进程');
 - `ipcRenderer` 用于渲染进程发送和接收消息。
 - 支持单向和双向通信，常见方法有 `send`、`invoke`、`on`、`handle` 等。
 
-**示例代码：**  
+::: details  示例代码
+
 主进程（main.js）：
 
 ```js
@@ -55,6 +56,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
   event.reply('asynchronous-reply', '主进程收到消息：' + arg);
 });
 ```
+
 
 渲染进程（renderer.js）：
 
@@ -65,8 +67,7 @@ ipcRenderer.on('asynchronous-reply', (event, arg) => {
   console.log(arg);
 });
 ```
-
----
+:::
 
 ## Electron 如何加载本地 HTML 文件？如何安全地加载远程网页？
 
@@ -79,7 +80,7 @@ ipcRenderer.on('asynchronous-reply', (event, arg) => {
 - `loadURL('https://example.com')` 加载远程页面，需防范 XSS、远程代码执行等风险。
 - 推荐配置：`nodeIntegration: false`，`contextIsolation: true`，并使用 `preload` 脚本做安全桥接。
 
-**示例代码：**  
+::: details 示例代码
 
 ```js
 const win = new BrowserWindow({
@@ -92,6 +93,7 @@ const win = new BrowserWindow({
 win.loadURL('https://example.com');
 ```
 
+:::
 
 ## Electron 应用如何打包和发布？常用的打包工具有哪些？
 
@@ -104,7 +106,8 @@ Electron 应用常用 `electron-builder`、`electron-packager` 等工具进行�
 - `electron-packager` 适合简单打包，不支持自动更新和高级配置。
 - 打包流程一般为：编写主/渲染进程代码 → 配置打包工具 → 执行打包命令 → 生成安装包。
 
-**示例代码：**  
+::: details 示例代码
+
 `package.json` 配置（以 electron-builder 为例）：
 
 ```json
@@ -125,7 +128,7 @@ Electron 应用常用 `electron-builder`、`electron-packager` 等工具进行�
 npm run build
 ```
 
----
+:::
 
 ## 如何在 Electron 中实现自动更新功能？
 
@@ -138,7 +141,8 @@ npm run build
 - 需要配置更新服务器（如 GitHub Releases、私有服务器）。
 - 主进程负责检测和下载更新，渲染进程可通过 IPC 通知用户。
 
-**示例代码：**  
+::: details 示例代码
+
 主进程（main.js）：
 
 ```js
@@ -149,7 +153,7 @@ autoUpdater.on('update-downloaded', () => {
 });
 ```
 
----
+:::
 
 ## Electron 如何访问本地文件系统？有哪些安全隐患？如何防范？
 
@@ -161,7 +165,7 @@ Electron 通过 Node.js 的 `fs` 模块访问本地文件系统，存在被恶�
 - 渲染进程默认可直接使用 Node.js API，若页面被 XSS 攻击，攻击者可读写本地文件。
 - 推荐做法：关闭 `nodeIntegration`，仅在 `preload` 脚本中暴露安全的 API 给渲染进程。
 
-**示例代码：**  
+::: details 示例代码
 `preload.js`：
 
 ```js
@@ -189,7 +193,7 @@ window.api.readFile('test.txt').then(content => {
 });
 ```
 
----
+:::
 
 ## Electron 的窗口（BrowserWindow）有哪些常用配置项？如何实现无边框窗口、透明窗口？
 
@@ -202,7 +206,7 @@ window.api.readFile('test.txt').then(content => {
 - `transparent: true` 使窗口背景透明，常用于美化界面或制作悬浮窗。
 - 其他常用配置项：`show`（是否显示）、`alwaysOnTop`（置顶）、`webPreferences`（网页相关配置）等。
 
-**示例代码：**  
+::: details 示例代码
 
 ```js
 const win = new BrowserWindow({
@@ -214,9 +218,9 @@ const win = new BrowserWindow({
 });
 ```
 
-继续补充第8~11题的核心答案、原理和示例代码：
+:::
 
----
+
 
 ## Electron 如何实现多窗口通信？
 
@@ -228,7 +232,8 @@ const win = new BrowserWindow({
 - 各渲染进程不能直接通信，需通过主进程转发消息。
 - 渲染进程A发送消息到主进程，主进程再将消息发送到渲染进程B。
 
-**示例代码：**  
+::: details 示例代码
+
 渲染进程A：
 
 ```js
@@ -255,7 +260,7 @@ ipcRenderer.on('from-other-window', (event, msg) => {
 });
 ```
 
----
+:::
 
 ## Electron 如何集成 Node.js 模块？有哪些注意事项？
 
@@ -267,7 +272,8 @@ Electron 主进程和渲染进程（开启 `nodeIntegration` 时）都可直接�
 - 主进程天然支持 Node.js 模块。
 - 渲染进程如需用 Node.js，建议关闭 `nodeIntegration`，通过 `preload` 脚本和 `contextBridge` 暴露安全 API，防止 XSS 攻击导致本地权限泄露。
 
-**示例代码：**  
+::: details 示例代码
+
 `preload.js`：
 
 ```js
@@ -284,7 +290,7 @@ contextBridge.exposeInMainWorld('myAPI', {
 console.log(window.myAPI.getPlatform());
 ```
 
----
+:::
 
 ## Electron 如何处理应用崩溃和异常？如何收集日志和错误信息？
 
@@ -298,7 +304,8 @@ console.log(window.myAPI.getPlatform());
 - 窗口崩溃可监听 `webContents` 的 `crashed` 事件。
 - 日志可用 `electron-log`、`winston` 等库持久化保存。
 
-**示例代码：**  
+::: details 示例代码
+
 主进程：
 
 ```js
@@ -315,7 +322,7 @@ window.onerror = function (msg, url, line, col, error) {
 };
 ```
 
----
+:::
 
 ## Electron 如何实现系统托盘（Tray）和通知（Notification）功能？
 
@@ -327,7 +334,8 @@ window.onerror = function (msg, url, line, col, error) {
 - `Tray` 可创建托盘图标、菜单，支持点击、右键等事件。
 - `Notification` 可在系统层面弹出原生通知，支持标题、正文、图标等配置。
 
-**示例代码：**  
+::: details 示例代码
+
 主进程（托盘）：
 
 ```js
@@ -346,9 +354,8 @@ tray.setContextMenu(contextMenu);
 new Notification({ title: '提示', body: '操作成功！' }).show();
 ```
 
-继续补充第12~15题的核心答案、原理和示例代码：
+:::
 
----
 
 ## Electron 如何与操作系统原生功能（如剪贴板、菜单、快捷键等）交互？
 
@@ -361,7 +368,8 @@ Electron 提供了 `clipboard`、`Menu`、`globalShortcut` 等模块，分别用
 - `Menu` 可自定义应用菜单和右键菜单，支持多级菜单和快捷键。
 - `globalShortcut` 可注册全局快捷键，响应用户在任何界面下的快捷操作。
 
-**示例代码：**  
+::: details 示例代码
+
 剪贴板：
 
 ```js
@@ -391,7 +399,7 @@ app.whenReady().then(() => {
 });
 ```
 
----
+:::
 
 ## Electron 如何防止 XSS、CSRF 等前端安全问题？
 
@@ -406,7 +414,8 @@ app.whenReady().then(() => {
 - 设置 CSP，限制页面可加载的资源，防止恶意脚本注入。
 - 对 IPC 通信进行白名单校验，防止消息伪造。
 
-**示例代码：**  
+::: details 示例代码
+
 窗口安全配置：
 
 ```js
@@ -425,7 +434,7 @@ const win = new BrowserWindow({
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
 ```
 
----
+:::
 
 ## Electron 如何实现自定义菜单栏和右键菜单？
 
@@ -438,7 +447,8 @@ const win = new BrowserWindow({
 - `Menu.popup` 在指定窗口弹出右键菜单。
 - 菜单项支持自定义点击事件、快捷键、子菜单等。
 
-**示例代码：**  
+::: details 示例代码
+
 自定义菜单栏：
 
 ```js
@@ -463,7 +473,7 @@ window.addEventListener('contextmenu', (e) => {
 });
 ```
 
----
+:::
 
 ## Electron 如何检测和响应网络状态变化？
 
@@ -476,7 +486,7 @@ window.addEventListener('contextmenu', (e) => {
 - 监听 `window` 的 `online` 和 `offline` 事件，可在网络状态变化时执行相应逻辑。
 - 也可通过定时请求接口进一步判断网络连通性。
 
-**示例代码：**  
+::: details 示例代码
 
 ```js
 window.addEventListener('online', () => {
@@ -487,4 +497,6 @@ window.addEventListener('offline', () => {
 });
 console.log('当前网络状态:', navigator.onLine ? '在线' : '离线');
 ```
-音视频
+
+:::
+

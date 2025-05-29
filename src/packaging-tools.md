@@ -67,7 +67,6 @@
 - 部分旧工具可能不完全兼容
 - 学习曲线相对较陡
 
-
 ## 说说webpack和vite有什么区别？他们打包和热更新机制是怎样的
 
 ### 1. 开发服务器启动
@@ -116,8 +115,6 @@
 - Vite：开发体验更好，启动和热更新更快
 - 选择：新项目推荐 Vite，老项目可继续使用 Webpack
 
-
-
 ## Webpack 的打包原理是什么？
 
 让我直接给出 Webpack 打包原理的核心步骤：
@@ -151,8 +148,10 @@
 ### 什么是plugin
 
 在webpack运行的生命周期中会广播出许多事件，plugin可以监听这些事件，在合适的时机通过webpack提供的API改变输出结果。
+
 - 例子：`HtmlWebpackPlugin`、`DefinePlugin`、`MiniCssExtractPlugin`
 
 ### loader和plugin的区别
+
 - `loader`它是一个转换器，将A文件进行编译形成B文件，这里操作的是文件，比如将A.scss转换为A.css，单纯的文件转换过程  
 - `plugin`是一个扩展器，它丰富了webpack本身，针对是loader结束后，webpack打包的整个过程，它并不直接操作文件，而是基于事件机制工作，会监听webpack打包过程中的某些节点，执行广泛的任务

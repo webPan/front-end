@@ -1,8 +1,6 @@
-高级
+# 高级
 
----
-
-## 1. 微任务和宏任务的区别及应用
+##  微任务和宏任务的区别及应用
 
 **核心答案：**  
 微任务（Microtask）优先于宏任务（Macrotask）执行，微任务主要包括 Promise.then、MutationObserver 等，宏任务包括 setTimeout、setInterval、setImmediate、I/O 等。事件循环每次从宏任务队列取出一个任务执行，执行完后会清空所有微任务队列。
@@ -11,6 +9,8 @@
 JavaScript 是单线程的，采用事件循环（Event Loop）机制。每次事件循环会先执行一个宏任务，然后清空所有微任务队列。这样可以保证微任务在当前宏任务执行后立即执行，而不会被下一个宏任务打断。合理使用微任务和宏任务可以优化异步流程和性能。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 console.log('start');
@@ -24,9 +24,9 @@ console.log('end');
 // 输出顺序：start -> end -> micro task -> macro task
 ```
 
----
+:::
 
-## 2. 如何实现 LRU 缓存？
+##  如何实现 LRU 缓存？
 
 **核心答案：**  
 LRU（最近最少使用）缓存可以用哈希表和双向链表实现，哈希表用于 O(1) 查找，双向链表用于 O(1) 插入和删除，保证最近访问的数据在链表头部，超出容量时移除尾部数据。
@@ -35,6 +35,8 @@ LRU（最近最少使用）缓存可以用哈希表和双向链表实现，哈�
 每次访问或插入数据时，将该数据移动到链表头部。哈希表存储 key 到链表节点的映射，便于快速定位。超出容量时，移除链表尾部节点，并从哈希表删除对应 key。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 class LRUCache {
@@ -59,38 +61,9 @@ class LRUCache {
 }
 ```
 
----
+:::
 
-## 3. Proxy 的应用场景和用法
-
-**核心答案：**  
-Proxy 可用于数据劫持、响应式、数据校验、虚拟属性、日志收集等场景。通过 Proxy 可以拦截对象的各种操作，实现自定义行为。
-
-**原理讲解：**  
-Proxy 是 ES6 提供的元编程特性，可以拦截对象的 get、set、has、deleteProperty 等操作。通过 handler 对象定义拦截逻辑，实现如响应式、只读、校验等功能。
-
-**示例代码：**
-
-```js
-const obj = { name: '张三' };
-const proxy = new Proxy(obj, {
-  get(target, prop) {
-    console.log(`访问属性：${prop}`);
-    return target[prop];
-  },
-  set(target, prop, value) {
-    console.log(`设置属性：${prop} = ${value}`);
-    target[prop] = value;
-    return true;
-  }
-});
-proxy.name; // 访问属性：name
-proxy.age = 18; // 设置属性：age = 18
-```
-
----
-
-## 4. 你如何理解函数柯里化？并实现一个柯里化函数
+##  你如何理解函数柯里化？并实现一个柯里化函数
 
 **核心答案：**  
 函数柯里化是将一个多参数函数转化为一系列单参数函数的技术，每次调用只传递一个参数，直到所有参数传递完毕再执行。
@@ -99,6 +72,8 @@ proxy.age = 18; // 设置属性：age = 18
 柯里化通过闭包保存参数，每次调用返回一个新函数，收集参数，直到参数数量满足原函数要求时执行原函数。这样可以实现参数复用和延迟执行。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function curry(fn, ...args) {
@@ -112,9 +87,9 @@ const curriedAdd = curry(add);
 console.log(curriedAdd(1)(2)(3)); // 6
 ```
 
----
+:::
 
-## 5. ES6 Symbol 类型及其应用
+##  ES6 Symbol 类型及其应用
 
 **核心答案：**  
 Symbol 是 ES6 引入的一种原始数据类型，表示独一无二的值，常用于对象属性的唯一标识，避免属性名冲突。
@@ -123,6 +98,8 @@ Symbol 是 ES6 引入的一种原始数据类型，表示独一无二的值，�
 Symbol 通过 `Symbol()` 创建，每个 Symbol 都是唯一的。可用作对象属性名，属性不会被常规遍历（如 for...in、Object.keys）枚举到，适合用作私有属性或元数据。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 const sym = Symbol('desc');
@@ -134,9 +111,9 @@ console.log(obj[sym]); // symbol value
 console.log(Object.keys(obj)); // ['normal']
 ```
 
----
+:::
 
-## 6. 模块化方案（ESM、CommonJS、UMD、AMD）区别
+##  模块化方案（ESM、CommonJS、UMD、AMD）区别
 
 **核心答案：**  
 ESM（ES Modules）是ES6标准的模块化方案，支持静态分析和按需加载；CommonJS主要用于Node.js，模块同步加载；AMD用于浏览器异步加载模块；UMD兼容CommonJS和AMD，适用于多种环境。
@@ -149,6 +126,8 @@ ESM（ES Modules）是ES6标准的模块化方案，支持静态分析和按需�
 - **UMD**：兼容CommonJS和AMD，能在多种环境下运行。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // ESM
@@ -182,17 +161,19 @@ define(['dep'], function(dep) {
 }));
 ```
 
----
+:::
 
-## 7. 你如何理解 Tree Shaking？
+##  你如何理解 Tree Shaking？
 
 **核心答案：**  
-Tree Shaking 是一种移除 JavaScript 代码中未被引用（“死代码”）的技术，常用于打包工具中优化最终产物体积。
+Tree Shaking 是一种移除 JavaScript 代码中未被引用（"死代码"）的技术，常用于打包工具中优化最终产物体积。
 
 **原理讲解：**  
 Tree Shaking 依赖于 ES Module 的静态结构，打包工具（如Webpack、Rollup）在编译时分析哪些模块和导出被实际使用，未被使用的代码会被移除，减少最终包体积。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // utils.js
@@ -205,9 +186,9 @@ used();
 // 打包后 unused 函数会被移除
 ```
 
----
+:::
 
-## 8. nextTick、setImmediate、MessageChannel 区别
+##  nextTick、setImmediate、MessageChannel 区别
 
 **核心答案：**  
 `process.nextTick`（Node.js）在当前事件循环结束前执行，优先级最高；`setImmediate`在下一个事件循环开始时执行；`MessageChannel`基于微任务，常用于浏览器端实现微任务队列。
@@ -220,6 +201,8 @@ used();
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // Node.js
 process.nextTick(() => console.log('nextTick'));
@@ -228,45 +211,12 @@ setImmediate(() => console.log('setImmediate'));
 // 浏览器
 const channel = new MessageChannel();
 channel.port1.onmessage = () => console.log('MessageChannel');
-channel.port2.postMessage(null);
+channel.portpostMessage(null);
 ```
 
----
+:::
 
-## 9. 如何实现深度响应式（如 Vue3 reactive）？
-
-**核心答案：**  
-深度响应式可通过 Proxy 递归代理对象的所有嵌套属性，实现属性变更时自动触发依赖更新。
-
-**原理讲解：**  
-Vue3 使用 Proxy 递归代理对象和数组，拦截 get/set 操作。访问属性时收集依赖，修改属性时触发依赖更新。对于嵌套对象，get 时递归代理，确保所有层级都响应式。
-
-**示例代码：**
-
-```js
-function reactive(obj) {
-  return new Proxy(obj, {
-    get(target, key, receiver) {
-      const res = Reflect.get(target, key, receiver);
-      if (typeof res === 'object' && res !== null) {
-        return reactive(res);
-      }
-      return res;
-    },
-    set(target, key, value, receiver) {
-      const result = Reflect.set(target, key, value, receiver);
-      // 依赖更新逻辑
-      return result;
-    }
-  });
-}
-const state = reactive({ a: { b: 1 } });
-state.a.b = 2; // 响应式
-```
-
----
-
-## 10. 虚拟 DOM 的优缺点
+## 虚拟 DOM 的优缺点
 
 **核心答案：**  
 优点：提升性能、跨平台、便于实现高效的 UI 更新。缺点：增加内存消耗、对极端场景性能不如手写 DOM 操作。
@@ -275,6 +225,8 @@ state.a.b = 2; // 响应式
 虚拟 DOM 是用 JS 对象描述真实 DOM 结构，更新时先生成新虚拟 DOM，再与旧虚拟 DOM diff，最后只更新变化的部分到真实 DOM，减少不必要的 DOM 操作。适合大部分场景，但在极端高频、复杂动画等场景下不如手写优化。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 简单虚拟DOM结构
@@ -288,9 +240,9 @@ const vnode = {
 // diff和patch过程省略
 ```
 
----
+:::
 
-## 11. Service Worker 的作用和应用
+##  Service Worker 的作用和应用
 
 **核心答案：**  
 Service Worker 主要用于离线缓存、拦截网络请求、推送通知和后台同步等，提升 Web 应用的性能和用户体验。
@@ -299,6 +251,8 @@ Service Worker 主要用于离线缓存、拦截网络请求、推送通知和�
 Service Worker 是运行在浏览器背后的独立线程，拦截和处理网络请求，可缓存资源，实现离线访问。它还能处理推送通知和后台数据同步。由于其独立于主线程，能有效提升性能和可靠性。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 注册 Service Worker
@@ -318,9 +272,9 @@ self.addEventListener('fetch', event => {
 });
 ```
 
----
+:::
 
-## 12. 垃圾回收机制及常见算法
+##  垃圾回收机制及常见算法
 
 **核心答案：**  
 JavaScript 常用的垃圾回收机制有标记-清除（Mark-and-Sweep）、引用计数（Reference Counting）和分代回收（Generational GC）等。
@@ -333,15 +287,17 @@ JavaScript 常用的垃圾回收机制有标记-清除（Mark-and-Sweep）、引
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // JavaScript 垃圾回收由引擎自动管理，无法直接操作
 let obj = { a: 1 };
 obj = null; // 原对象会被垃圾回收
 ```
 
----
+:::
 
-## 13. Web Worker 的作用和场景
+##  Web Worker 的作用和场景
 
 **核心答案：**  
 Web Worker 用于在浏览器中开启多线程，处理大量计算或耗时任务，避免阻塞主线程，提高页面流畅度。
@@ -350,6 +306,8 @@ Web Worker 用于在浏览器中开启多线程，处理大量计算或耗时任
 Web Worker 运行在独立线程，与主线程通过消息传递通信。适合处理大数据计算、文件处理等场景，但不能操作 DOM。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // main.js
@@ -365,9 +323,9 @@ onmessage = function(e) {
 };
 ```
 
----
+:::
 
-## 14. requestAnimationFrame 和 setTimeout 区别
+##  requestAnimationFrame 和 setTimeout 区别
 
 **核心答案：**  
 requestAnimationFrame 专为动画设计，回调在浏览器下一帧渲染前执行，节能且流畅；setTimeout 定时执行，可能与屏幕刷新不同步，动画不流畅。
@@ -376,6 +334,8 @@ requestAnimationFrame 专为动画设计，回调在浏览器下一帧渲染前�
 requestAnimationFrame 会根据屏幕刷新率自动调整回调执行时机，页面隐藏时自动暂停，节省资源。setTimeout 固定时间后执行，可能导致掉帧或资源浪费。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function animate() {
@@ -392,9 +352,9 @@ function animate2() {
 animate2();
 ```
 
----
+:::
 
-## 15. import() 动态导入原理和应用
+##  import() 动态导入原理和应用
 
 **核心答案：**  
 import() 是 ES 提供的动态导入语法，返回 Promise，可实现按需加载、懒加载和代码分割。
@@ -403,6 +363,8 @@ import() 是 ES 提供的动态导入语法，返回 Promise，可实现按需�
 import() 在运行时动态加载模块，只有在需要时才发起请求，适合路由懒加载、组件异步加载等场景。打包工具会自动将其分割为独立 chunk。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 动态导入
@@ -414,9 +376,9 @@ import('./module.js').then(module => {
 const AsyncComponent = () => import('./AsyncComponent.vue');
 ```
 
----
+:::
 
-## 16. JavaScript 的内存管理机制
+##  JavaScript 的内存管理机制
 
 **核心答案：**  
 JavaScript 采用自动内存管理机制，开发者只需分配内存，释放由垃圾回收器自动完成，常用算法有标记-清除和分代回收。
@@ -426,15 +388,17 @@ JavaScript 引擎会自动分配内存给新创建的变量和对象，并定期
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 let obj = { a: 1 };
 obj = null; // 原对象会被垃圾回收
 // 内存管理由引擎自动完成
 ```
 
----
+:::
 
-## 17. 你如何理解惰性函数及其应用？
+##  你如何理解惰性函数及其应用？
 
 **核心答案：**  
 惰性函数是指函数首次执行时会进行初始化操作，并重写自身为更高效的实现，后续调用直接执行新函数，提升性能。
@@ -443,6 +407,8 @@ obj = null; // 原对象会被垃圾回收
 惰性函数通过在第一次调用时替换自身，避免重复的初始化判断。常用于事件绑定、特性检测等场景，减少不必要的分支判断。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function addEvent(element, type, handler) {
@@ -459,9 +425,9 @@ function addEvent(element, type, handler) {
 }
 ```
 
----
+:::
 
-## 18. 浏览器渲染流程
+##  浏览器渲染流程
 
 **核心答案：**  
 浏览器渲染流程包括：解析HTML生成DOM树，解析CSS生成CSSOM树，合成渲染树，布局（回流），绘制（重绘），合成图层并显示到屏幕。
@@ -477,23 +443,15 @@ function addEvent(element, type, handler) {
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // 渲染流程为浏览器内部机制，无法直接用代码实现
 // 可通过如下方式触发重排重绘
 document.body.style.width = '100px'; // 触发布局和绘制
 ```
 
----
-
-## 19. 如何实现发布订阅模式？
-
-**核心答案：**  
-发布订阅模式通过事件中心维护订阅者列表，发布事件时通知所有订阅者，实现模块间解耦。
-
-**原理讲解：**  
-发布者将事件和回调注册到事件中心，订阅者监听事件，发布时事件中心遍历并执行所有回调。常用于事件总线、消息通知等场景。
-
-**示例代码：**
+:::
 
 ```js
 class EventEmitter {
@@ -516,9 +474,9 @@ bus.on('test', data => console.log(data));
 bus.emit('test', 'hello');
 ```
 
----
+:::
 
-## 20. JavaScript 内存模型和垃圾回收
+##  JavaScript 内存模型和垃圾回收
 
 **核心答案：**  
 JavaScript 内存模型分为栈内存（存储基本类型和执行上下文）和堆内存（存储对象），垃圾回收器自动回收不再被引用的内存。
@@ -531,15 +489,17 @@ JavaScript 内存模型分为栈内存（存储基本类型和执行上下文）
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 let a = 1; // 栈内存
 let obj = { b: 2 }; // 堆内存
 obj = null; // 垃圾回收器会自动回收
 ```
 
----
+:::
 
-## 21. 你如何理解 Function.prototype.toString()？
+##  你如何理解 Function.prototype.toString()？
 
 **核心答案：**  
 Function.prototype.toString() 返回函数的源码字符串表示，可以用于查看函数的实现内容，ES6 后保留了原始书写格式。
@@ -548,6 +508,8 @@ Function.prototype.toString() 返回函数的源码字符串表示，可以用�
 调用函数的 toString 方法会返回该函数的源码文本，包括注释和空格。ES6 之前部分实现会返回 [native code]，ES6 之后规范要求返回精确源码。常用于代码序列化、函数克隆、代码分析等场景。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function foo(a, b) {
@@ -558,9 +520,9 @@ console.log(foo.toString());
 // 输出：function foo(a, b) {  // 注释  return a + b; }
 ```
 
----
+:::
 
-## 22. JavaScript 的隐式和显示类型转换
+##  JavaScript 的隐式和显示类型转换
 
 **核心答案：**  
 隐式类型转换由 JS 引擎自动完成，如 +、== 运算时自动转换；显示类型转换由开发者主动调用，如 Number()、String()、Boolean()。
@@ -571,6 +533,8 @@ console.log(foo.toString());
 - 显式转换：使用构造函数或 API 主动转换类型，如 Number('123')、String(123)、Boolean(0)。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 隐式转换
@@ -584,9 +548,9 @@ console.log(String(456)); // '456'
 console.log(Boolean(0)); // false
 ```
 
----
+:::
 
-## 23. 你如何理解 WebAssembly 及其前端应用？
+##  你如何理解 WebAssembly 及其前端应用？
 
 **核心答案：**  
 WebAssembly（wasm）是一种可在浏览器高效运行的二进制代码格式，适合高性能计算、游戏、音视频处理等前端场景。
@@ -595,6 +559,8 @@ WebAssembly（wasm）是一种可在浏览器高效运行的二进制代码格�
 WebAssembly 由 C/C++/Rust 等语言编译生成，能与 JS 互操作，运行速度接近原生。适合性能瓶颈场景，如大型游戏、图像处理、加密算法等，提升前端性能。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 加载 wasm 模块
@@ -606,9 +572,9 @@ fetch('module.wasm')
   });
 ```
 
----
+:::
 
-## 24. 惰性求值的理解和应用
+##  惰性求值的理解和应用
 
 **核心答案：**  
 惰性求值指表达式在需要时才计算结果，常用于提升性能、节省资源，如生成器、按需加载等。
@@ -617,6 +583,8 @@ fetch('module.wasm')
 惰性求值通过延迟计算，只有在真正用到结果时才执行计算，避免不必要的资源消耗。常见于生成器（Generator）、惰性函数、虚拟列表等场景。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function* lazyRange(n) {
@@ -629,9 +597,9 @@ console.log(gen.next().value); // 0
 console.log(gen.next().value); // 1
 ```
 
----
+:::
 
-## 25. 浏览器缓存机制（强缓存、协商缓存）
+##  浏览器缓存机制（强缓存、协商缓存）
 
 **核心答案：**  
 浏览器缓存分为强缓存（如 Expires、Cache-Control）和协商缓存（如 Last-Modified、ETag），强缓存命中直接用本地资源，协商缓存需与服务器确认资源是否更新。
@@ -643,6 +611,8 @@ console.log(gen.next().value); // 1
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // 设置强缓存
 // Cache-Control: max-age=3600
@@ -652,10 +622,9 @@ console.log(gen.next().value); // 1
 // ETag: "abc123"
 ```
 
+:::
 
----
-
-## 26. Service Worker 离线缓存原理和实现
+##  Service Worker 离线缓存原理和实现
 
 **核心答案：**  
 Service Worker 通过拦截网络请求，将资源缓存到本地，实现离线访问和资源更新，提升 Web 应用的可用性和性能。
@@ -664,6 +633,8 @@ Service Worker 通过拦截网络请求，将资源缓存到本地，实现离�
 Service Worker 在安装阶段缓存静态资源，拦截 fetch 请求时优先返回缓存内容。可根据策略选择缓存优先、网络优先等模式。资源更新时通过激活新 Service Worker 替换旧缓存。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // sw.js
@@ -681,9 +652,9 @@ self.addEventListener('fetch', event => {
 });
 ```
 
----
+:::
 
-## 27. WebSocket 原理及与 HTTP 区别
+##  WebSocket 原理及与 HTTP 区别
 
 **核心答案：**  
 WebSocket 是一种全双工通信协议，支持客户端和服务器实时双向通信，区别于 HTTP 的单向请求-响应模式。
@@ -692,6 +663,8 @@ WebSocket 是一种全双工通信协议，支持客户端和服务器实时双�
 WebSocket 通过 HTTP 协议发起握手，建立连接后切换为 WebSocket 协议，保持长连接，支持实时数据推送。HTTP 每次通信需重新建立连接，WebSocket 只需一次握手，后续数据低延迟、无额外开销。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 客户端
@@ -707,9 +680,9 @@ server.on('connection', socket => {
 });
 ```
 
----
+:::
 
-## 28. JavaScript 装饰器及应用场景
+##  JavaScript 装饰器及应用场景
 
 **核心答案：**  
 装饰器是一种用于修改类、属性、方法行为的语法糖，常用于日志、权限校验、依赖注入等场景。
@@ -718,6 +691,8 @@ server.on('connection', socket => {
 装饰器本质是函数，接收被装饰对象作为参数，可扩展或修改其行为。常用于类库、框架中增强功能。当前为实验性语法，需 Babel 等工具支持。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function log(target, name, descriptor) {
@@ -739,9 +714,9 @@ const e = new Example();
 e.sum(1, 2); // 控制台输出调用信息
 ```
 
----
+:::
 
-## 29. Proxy 实现响应式的原理
+##  Proxy 实现响应式的原理
 
 **核心答案：**  
 Proxy 通过拦截对象的 get/set 操作，实现依赖收集和变更通知，从而实现响应式数据绑定。
@@ -750,6 +725,8 @@ Proxy 通过拦截对象的 get/set 操作，实现依赖收集和变更通知�
 Proxy 可以拦截对象属性的读取和修改，读取时收集依赖，修改时通知依赖更新。Vue3 就是基于 Proxy 实现深度响应式，解决了 Object.defineProperty 的局限。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 let activeEffect = null;
@@ -774,9 +751,9 @@ function reactive(obj) {
 }
 ```
 
----
+:::
 
-## 30. 浏览器渲染优化策略
+##  浏览器渲染优化策略
 
 **核心答案：**  
 常见优化策略包括减少重排重绘、合并 DOM 操作、使用虚拟列表、懒加载、开启硬件加速、合理使用 CSS3 动画等。
@@ -791,6 +768,8 @@ function reactive(obj) {
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // 批量插入 DOM
 const frag = document.createDocumentFragment();
@@ -804,9 +783,9 @@ document.body.appendChild(frag);
 <img src="placeholder.jpg" data-src="real.jpg" loading="lazy" />
 ```
 
----
+:::
 
-## 31. JavaScript 尾递归优化及局限
+##  JavaScript 尾递归优化及局限
 
 **核心答案：**  
 尾递归优化是指在函数最后一步调用自身时，复用当前栈帧，避免栈溢出。但目前大多数 JavaScript 引擎（如 V8）并未实现尾递归优化。
@@ -815,6 +794,8 @@ document.body.appendChild(frag);
 尾递归是指函数的最后一步是返回自身的递归调用。理论上，编译器可将递归转为循环，节省栈空间。但由于兼容性和实现难度，主流 JS 引擎未支持，递归层数过多仍会栈溢出。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 理想的尾递归
@@ -826,9 +807,9 @@ console.log(factorial(5)); // 120
 // 实际上大多数 JS 环境仍会栈溢出
 ```
 
----
+:::
 
-## 32. 前端安全（XSS、CSRF）及防护
+##  前端安全（XSS、CSRF）及防护
 
 **核心答案：**  
 XSS（跨站脚本）通过注入恶意脚本攻击用户，防护措施有输入校验、输出转义、CSP等；CSRF（跨站请求伪造）通过伪造用户请求攻击服务器，防护措施有验证码、Referer 校验、Token 验证等。
@@ -840,6 +821,8 @@ XSS（跨站脚本）通过注入恶意脚本攻击用户，防护措施有输�
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // XSS 防护
 const safe = input => input.replace(/[<>"']/g, c => ({
@@ -850,9 +833,9 @@ const safe = input => input.replace(/[<>"']/g, c => ({
 // 服务端生成并下发 token，前端请求时带上 token，服务端校验
 ```
 
----
+:::
 
-## 33. 数组与链表的区别
+##  数组与链表的区别
 
 **核心答案：**  
 数组支持随机访问，插入删除慢；链表插入删除快，随机访问慢。数组适合查找多、变动少场景，链表适合频繁插入删除。
@@ -863,6 +846,8 @@ const safe = input => input.replace(/[<>"']/g, c => ({
 - 链表内存不连续，每个节点存指针，插入删除只需修改指针，效率高，但查找需遍历，效率低。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 数组
@@ -877,9 +862,9 @@ const head = new Node(1);
 head.next = new Node(2);
 ```
 
----
+:::
 
-## 34. 常见浏览器内核
+##  常见浏览器内核
 
 **核心答案：**  
 常见浏览器内核有 Blink（Chrome、Edge）、WebKit（Safari）、Gecko（Firefox）、Trident（IE）。
@@ -888,6 +873,8 @@ head.next = new Node(2);
 浏览器内核负责解析 HTML、CSS、JS 并渲染页面。不同内核实现细节和标准支持略有差异，影响页面兼容性和性能。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 检测浏览器内核（简单示例）
@@ -898,9 +885,10 @@ else if (ua.includes('Firefox')) console.log('Gecko');
 else if (ua.includes('Trident')) console.log('Trident');
 ```
 
----
+:::
 
-## 35. 浏览器内核的理解
+
+##  浏览器内核的理解
 
 **核心答案：**  
 浏览器内核是负责网页解析、渲染和脚本执行的核心组件，决定了浏览器的兼容性、性能和特性支持。
@@ -910,8 +898,12 @@ else if (ua.includes('Trident')) console.log('Trident');
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // 获取当前 JS 引擎信息（部分浏览器支持）
 console.log(window.navigator.userAgent);
 // 具体内核信息需结合 UA 分析
 ```
+
+:::

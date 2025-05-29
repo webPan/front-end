@@ -1,5 +1,3 @@
-# 中级
-
 ## var、let、const 区别
 
 **核心答案：**  
@@ -11,7 +9,7 @@
 - `let` 和 `const` 声明的变量只在块级作用域内有效，不会被提升，不能重复声明。
 - `const` 声明的变量必须初始化，且不能被重新赋值（但对象属性可变）。
 
-**示例代码：**
+::: details 示例代码
 
 ```js
 {
@@ -32,7 +30,7 @@ const z = 30;
 // z = 40; // 报错，不能重新赋值
 ```
 
----
+:::
 
 ## == 与 === 区别
 
@@ -46,6 +44,8 @@ const z = 30;
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 console.log(1 == '1');    // true，类型转换后比较
 console.log(1 === '1');   // false，类型不同
@@ -55,7 +55,7 @@ console.log(0 == false);  // true
 console.log(0 === false); // false
 ```
 
----
+:::
 
 ## 判断空对象的方法
 
@@ -69,6 +69,8 @@ console.log(0 === false); // false
 - 还可以用 `JSON.stringify(obj) === '{}'` 判断。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 const obj = {};
@@ -84,6 +86,8 @@ console.log(isEmpty); // true
 console.log(JSON.stringify(obj) === '{}'); // true
 ```
 
+:::
+
 ## 闭包作用与场景
 
 **核心答案：**  
@@ -92,10 +96,12 @@ console.log(JSON.stringify(obj) === '{}'); // true
 **原理讲解：**  
 
 - 闭包是指有权访问另一个函数作用域中变量的函数。
-- 闭包会“记住”其创建时的作用域，即使外部函数已经返回。
+- 闭包会"记住"其创建时的作用域，即使外部函数已经返回。
 - 常见用途：实现私有变量、工厂函数、回调函数等。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function makeCounter() {
@@ -110,7 +116,7 @@ console.log(counter()); // 1
 console.log(counter()); // 2
 ```
 
----
+:::
 
 ## 跨域原因
 
@@ -125,6 +131,8 @@ console.log(counter()); // 2
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // 假设前端页面在 http://a.com，接口在 http://b.com
 fetch('http://b.com/api/data')
@@ -133,7 +141,7 @@ fetch('http://b.com/api/data')
 // 由于不同源，浏览器会阻止请求，除非后端设置了 CORS 允许跨域
 ```
 
----
+:::
 
 ## 防抖与节流
 
@@ -146,6 +154,8 @@ fetch('http://b.com/api/data')
 - 节流（throttle）：适用于滚动、拖拽等场景，保证一段时间只执行一次，提高性能。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 防抖
@@ -170,7 +180,7 @@ function throttle(fn, delay) {
 }
 ```
 
----
+:::
 
 ## 深拷贝与浅拷贝
 
@@ -184,6 +194,8 @@ function throttle(fn, delay) {
 - 常用方法：浅拷贝用 `Object.assign`、展开运算符，深拷贝可用 `JSON.parse(JSON.stringify(obj))` 或递归。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 浅拷贝
@@ -199,7 +211,7 @@ deep.b.c = 4;
 console.log(obj2.b.c); // 2
 ```
 
----
+:::
 
 ## 事件模型与委托
 
@@ -213,6 +225,8 @@ console.log(obj2.b.c); // 2
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // 事件委托示例
 document.getElementById('parent').addEventListener('click', function(e) {
@@ -222,7 +236,7 @@ document.getElementById('parent').addEventListener('click', function(e) {
 });
 ```
 
----
+:::
 
 ## 减少回流重绘方法
 
@@ -236,6 +250,8 @@ document.getElementById('parent').addEventListener('click', function(e) {
 - 优化方法：批量操作 DOM、缓存布局信息、减少逐条样式修改、用 `display: none` 脱离文档流后再操作等。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 合并 DOM 操作
@@ -251,7 +267,7 @@ const el = document.getElementById('box');
 el.style.cssText = 'width:100px;height:100px;background:red;';
 ```
 
----
+:::
 
 ## fetch 与 ajax 区别
 
@@ -265,6 +281,8 @@ el.style.cssText = 'width:100px;height:100px;background:red;';
 - `fetch` 不会自动发送和接收 cookies，需手动设置。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // fetch
@@ -283,7 +301,7 @@ xhr.onreadystatechange = function() {
 xhr.send();
 ```
 
----
+:::
 
 ## new 原理
 
@@ -298,6 +316,8 @@ xhr.send();
 - 如果构造函数返回对象，则返回该对象，否则返回新对象。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 function myNew(fn, ...args) {
@@ -314,7 +334,7 @@ const p = myNew(Person, 'Tom');
 console.log(p.name); // Tom
 ```
 
----
+:::
 
 ## typeof 与 instanceof 区别
 
@@ -328,6 +348,8 @@ console.log(p.name); // Tom
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 console.log(typeof 1); // "number"
 console.log(typeof 'a'); // "string"
@@ -339,7 +361,7 @@ console.log({} instanceof Object); // true
 console.log(null instanceof Object); // false
 ```
 
----
+:::
 
 ## 事件循环机制
 
@@ -354,6 +376,8 @@ console.log(null instanceof Object); // false
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 console.log('start');
 setTimeout(() => console.log('timeout'), 0);
@@ -362,7 +386,7 @@ console.log('end');
 // 输出顺序：start -> end -> promise -> timeout
 ```
 
----
+:::
 
 ## 常见内存泄漏
 
@@ -377,6 +401,8 @@ console.log('end');
 - DOM 引用：JS 持有 DOM 元素引用，DOM 被移除但内存未释放。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 // 未清理定时器
@@ -393,7 +419,7 @@ function foo() {
 const leak = foo();
 ```
 
----
+:::
 
 ## Promise 用法与方法
 
@@ -409,6 +435,8 @@ Promise 用于处理异步操作，常用方法有 then、catch、finally、Prom
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 const p = new Promise((resolve, reject) => {
   setTimeout(() => resolve('ok'), 1000);
@@ -421,7 +449,7 @@ Promise.all([Promise.resolve(1), Promise.resolve(2)]).then(res => console.log(re
 Promise.race([Promise.resolve(1), Promise.resolve(2)]).then(res => console.log(res));
 ```
 
----
+:::
 
 ## async/await 原理与注意
 
@@ -437,6 +465,8 @@ Promise.race([Promise.resolve(1), Promise.resolve(2)]).then(res => console.log(r
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 async function fetchData() {
   try {
@@ -450,7 +480,7 @@ async function fetchData() {
 fetchData().then(data => console.log(data));
 ```
 
----
+:::
 
 ## Map 与 Object 区别
 
@@ -465,6 +495,8 @@ fetchData().then(data => console.log(data));
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 const map = new Map();
 map.set(1, 'a');
@@ -477,7 +509,7 @@ console.log(obj['a']); // 1
 console.log(Object.keys(obj).length); // 2
 ```
 
----
+:::
 
 ## Set 与 Array 区别
 
@@ -492,6 +524,8 @@ console.log(Object.keys(obj).length); // 2
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 const arr = [1, 2, 2, 3];
 const set = new Set(arr);
@@ -503,7 +537,7 @@ set.delete(1);
 console.log(set); // Set(3) {2, 3, 4}
 ```
 
----
+:::
 
 ## WeakMap 与 WeakSet 场景
 
@@ -517,6 +551,8 @@ console.log(set); // Set(3) {2, 3, 4}
 - 适合缓存、私有数据存储等场景。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 let obj = {};
@@ -532,7 +568,7 @@ console.log(ws.has(obj2)); // true
 obj2 = null; // obj2 被回收
 ```
 
----
+:::
 
 ## JSONP 原理与优缺点
 
@@ -547,6 +583,8 @@ JSONP 通过动态创建 `<script>` 标签实现跨域请求，只支持 GET 请
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 // 前端
 function handleData(data) {
@@ -560,7 +598,7 @@ document.body.appendChild(script);
 // handleData({name: 'Tom', age: 18});
 ```
 
----
+:::
 
 ## async 与 defer 区别
 
@@ -575,12 +613,14 @@ document.body.appendChild(script);
 
 **示例代码：**
 
+::: details 示例代码
+
 ```html
 <script src="a.js" async></script>
 <script src="b.js" defer></script>
 ```
 
----
+:::
 
 ## 原型与原型链
 
@@ -595,6 +635,8 @@ document.body.appendChild(script);
 
 **示例代码：**
 
+::: details 示例代码
+
 ```js
 function Person() {}
 Person.prototype.sayHi = function() { console.log('hi'); };
@@ -604,7 +646,7 @@ console.log(p.__proto__ === Person.prototype); // true
 console.log(Person.prototype.__proto__ === Object.prototype); // true
 ```
 
----
+:::
 
 ## 手写 call/apply/bind
 
@@ -618,6 +660,8 @@ console.log(Person.prototype.__proto__ === Object.prototype); // true
 - `bind`：返回一个 this 被绑定的新函数，可延迟执行。
 
 **示例代码：**
+
+::: details 示例代码
 
 ```js
 Function.prototype.myCall = function(context, ...args) {
@@ -643,3 +687,5 @@ Function.prototype.myBind = function(context, ...args) {
   };
 };
 ```
+
+:::
