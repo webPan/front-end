@@ -22,6 +22,8 @@ export default defineConfig({
       { text: 'Vue', link: '/vue.html' },
       { text: '音视频', link: '/audio-video.html' },
       { text: 'Electron', link: '/electron.html' },
+      { text: 'TreeJs', link: '/treeJs.html' },
+      { text: 'NextJs', link: '/nextJs.html' },
       { text: '移动端', link: '/mobile.html' },
       { text: '打包工具', link: '/packaging-tools.html' },
       { text: '设计模式', link: '/design-pattern.html' },
