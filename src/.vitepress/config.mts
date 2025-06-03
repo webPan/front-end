@@ -12,7 +12,7 @@ export default defineConfig({
     nav: [
       { text: '设计模式', link: 'https://vue3js.cn/interview/design/design.html#%E4%B8%80%E3%80%81%E6%98%AF%E4%BB%80%E4%B9%88' },
       { text: '其他题库', link: 'https://vue3js.cn/interview/' },
-      {text:'博文',link: '/blog.html'}
+      { text: '博文', link: '/blog.html' }
     ],
     sidebar: [
       { text: '初级', link: '/base.html' },
@@ -22,8 +22,8 @@ export default defineConfig({
       { text: 'Vue', link: '/vue.html' },
       { text: '音视频', link: '/audio-video.html' },
       { text: 'Electron', link: '/electron.html' },
-      { text: 'TreeJs', link: '/treeJs.html' },
-      { text: 'NextJs', link: '/nextJs.html' },
+      { text: 'Tree.js', link: '/treeJs.html' },
+      { text: 'Next.js', link: '/nextJs.html' },
       { text: '移动端', link: '/mobile.html' },
       { text: '打包工具', link: '/packaging-tools.html' },
       { text: '设计模式', link: '/design-pattern.html' },

@@ -1,771 +1,1021 @@
 # Next.js
 
-## Next.js 是什么？它与 React 有什么关系？
+## Next.js 中的静态生成（SSG）、服务端渲染（SSR）、客户端渲染（CSR）有什么区别？
 
-**核心答案：**  
-Next.js 是一个基于 React 的服务端渲染（SSR）和静态网站生成（SSG）框架，它为 React 应用提供了更完善的路由、数据获取、SEO 优化等能力，使开发者能够更高效地构建生产级 Web 应用。
+### 核心答案
 
-**原理讲解：**  
-Next.js 在 React 的基础上，增加了服务端渲染、静态生成、API 路由、自动代码分割等特性。它通过约定式的文件结构（如 `pages` 目录）实现自动路由，并支持多种数据获取方式（如 `getStaticProps`、`getServerSideProps`）。Next.js 既可以在服务器端渲染页面，也可以生成静态页面，兼顾了性能和 SEO。React 负责 UI 构建，而 Next.js 则负责应用的整体架构和优化。
+- SSG（静态生成）：在构建时生成 HTML，适合内容不频繁变动的页面，访问速度快，利于 SEO。
+- SSR（服务端渲染）：每次请求时在服务端生成 HTML，适合内容经常变动、需要实时数据的页面，兼顾 SEO 和动态性。
+- CSR（客户端渲染）：页面首次只返回空壳 HTML，数据和渲染逻辑都在浏览器端完成，适合交互性强但对 SEO 要求不高的场景。
 
-::: details 示例代码
+### 详细原理讲解
+
+#### 1. SSG（Static Site Generation）
+
+- 在项目构建（build）阶段，`Next.js` 会根据页面的数据预先生成静态 HTML 文件。
+- 用户访问页面时，直接返回已生成的 HTML，速度极快，服务器压力小。
+- 适合博客、文档等内容不常变动的场景。
+- 通过 `getStaticProps`、`getStaticPaths` 实现。
+
+#### 2. SSR（Server Side Rendering）
+
+- 每次有用户请求页面时，`Next.js` 都会在服务端执行页面组件，获取数据并生成 HTML 返回给浏览器。
+- 页面内容总是最新的，适合需要实时数据的场景。
+- 通过 getServerSideProps 实现。
+
+#### 3. CSR（Client Side Rendering）
+
+- 首次请求只返回一个基本的 HTML 框架，页面内容通过 JavaScript 在客户端请求 API 后渲染。
+- 适合对 SEO 要求不高、交互性强的应用，如后台管理系统。
+- 通过 useEffect、fetch 等在组件内获取数据。
+
+### 示例代码
+
+::: details SSG 示例（静态生成）
+
 ```js
-// pages/index.js
-// 这是一个 Next.js 页面组件，支持服务端渲染
+// pages/posts/[id].js
 import React from 'react';
 
-export default function Home({ time }) {
+export default function Post({ post }) {
   return (
     <div>
-      <h1>欢迎来到 Next.js 应用！</h1>
-      <p>当前服务器时间：{time}</p>
+      <h1>{post.title}</h1>
+      <p>{post.content}</p>
     </div>
   );
 }
 
-// getServerSideProps 是 Next.js 提供的服务端数据获取方法
-// 每次请求都会在服务端执行，返回的数据作为 props 传递给页面组件
+// 在构建时生成所有静态页面
+export async function getStaticPaths() {
+  // 假设有一个 API 返回所有文章 id
+  const res = await fetch('https://api.example.com/posts');
+  const posts = await res.json();
+
+  // 生成所有路径
+  const paths = posts.map(post => ({
+    params: { id: post.id.toString() }
+  }));
+
+  return { paths, fallback: false };
+}
+
+// 获取每个页面的数据
+export async function getStaticProps({ params }) {
+  const res = await fetch(`https://api.example.com/posts/${params.id}`);
+  const post = await res.json();
+
+  return { props: { post } };
+}
+```
+
+:::
+
+::: details SSR 示例（服务端渲染）
+
+```js
+// pages/profile.js
+import React from 'react';
+
+export default function Profile({ user }) {
+  return (
+    <div>
+      <h1>欢迎，{user.name}</h1>
+      <p>邮箱：{user.email}</p>
+    </div>
+  );
+}
+
+// 每次请求时服务端获取数据
+export async function getServerSideProps(context) {
+  // 可以获取 cookie、session 等
+  const res = await fetch('https://api.example.com/user', {
+    headers: {
+      cookie: context.req.headers.cookie || ''
+    }
+  });
+  const user = await res.json();
+
+  return { props: { user } };
+}
+```
+
+:::
+
+::: details CSR 示例（客户端渲染）
+
+```js
+// pages/dashboard.js
+import React, { useEffect, useState } from 'react';
+
+export default function Dashboard() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    // 客户端渲染时获取数据
+    fetch('/api/dashboard')
+      .then(res => res.json())
+      .then(setData);
+  }, []);
+
+  if (!data) return <div>加载中...</div>;
+
+  return (
+    <div>
+      <h1>仪表盘</h1>
+      <p>欢迎回来，{data.username}</p>
+    </div>
+  );
+}
+```
+
+:::
+
+## Next.js 如何实现服务端渲染（SSR）？其底层原理是什么？
+
+### 核心答案
+
+`Next.js` 通过在 `Node.js` 服务器上运行 React 组件，结合 `getServerSideProps` 等数据获取方法，在每次请求时生成 HTML，实现服务端渲染。底层原理是 React 的 `renderToString` 方法结合 `Next.js` 路由和数据预取机制。
+
+#### 详细原理
+
+- 用户请求页面时，`Next.js` 服务器会根据路由找到对应的 React 组件。
+- 如果页面导出了 `getServerSideProps`，`Next.js` 会先执行该方法获取数据。
+- 拿到数据后，`Next.js` 用 React 的 renderToString 方法将组件渲染为 HTML 字符串。
+- 服务器将 HTML 和数据一同返回给浏览器，浏览器再进行 hydration（再水化）使页面变为可交互的 SPA。
+- 这样既保证了首屏渲染速度和 SEO，又能享受 React 的客户端交互体验。
+
+::: details SSR 实现示例
+
+```js
+// pages/news.js
+import React from 'react';
+
+export default function News({ list }) {
+  return (
+    <div>
+      <h1>最新新闻</h1>
+      <ul>
+        {list.map(item => (
+          <li key={item.id}>{item.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// 每次请求时服务端获取数据
 export async function getServerSideProps() {
+  const res = await fetch('https://api.example.com/news');
+  const list = await res.json();
+  return { props: { list } };
+}
+```
+
+:::
+
+## 如何在 Next.js 中实现 SEO 优化？越详细越好
+
+### 核心答案
+
+Next.js 通过 `SSR/SSG` 生成可被搜索引擎抓取的 HTML，结合 Head 组件设置 meta 标签、结构化数据、`sitemap`、`robots.txt`、图片优化等手段实现 SEO 优化。
+
+#### 详细原理
+
+- **`SSR/SSG`**：保证页面首屏 HTML 完整，利于搜索引擎抓取。
+- **Head 组件**：用 `next/head` 设置 `title`、`description`、`keywords`、`OG` 标签等 `meta` 信息。
+- **结构化数据**：通过 JSON-LD 提供结构化信息，提升搜索排名。
+- **`sitemap/robots.txt`**：自动生成 `sitemap.xml` 和 `robots.txt`，帮助搜索引擎更好索引网站。
+- **图片优化**：使用 `next/image` 组件，自动生成多尺寸图片和懒加载。
+- **语义化标签**：使用 `header`、`main`、`footer`、`article` 等 HTML5 语义标签。
+- **`Canonical` 链接**：避免重复内容，提升权重。
+
+::: details SEO 优化示例
+
+```js
+// pages/article.js
+import Head from 'next/head';
+
+export default function Article({ article }) {
+  return (
+    <>
+      <Head>
+        <title>{article.title} - 我的博客</title>
+        <meta name="description" content={article.summary} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={article.summary} />
+        <meta property="og:type" content="article" />
+        <link rel="canonical" href={`https://example.com/article/${article.id}`} />
+        {/* 结构化数据 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Article",
+              headline: article.title,
+              description: article.summary,
+              author: { "@type": "Person", name: article.author }
+            })
+          }}
+        />
+      </Head>
+      <main>
+        <h1>{article.title}</h1>
+        <p>{article.content}</p>
+      </main>
+    </>
+  );
+}
+```
+
+:::
+
+::: details `sitemap/robots.txt` 自动生成
+
+```js
+// 安装 next-sitemap
+// npm install next-sitemap
+
+// next-sitemap.config.js
+module.exports = {
+  siteUrl: 'https://example.com',
+  generateRobotsTxt: true,
+};
+```
+
+:::
+
+## SSR 项目中如何实现页面缓存？常见的缓存策略有哪些？
+
+### 核心答案
+
+SSR 项目可通过 HTTP 缓存头、服务端中间件（如 Redis）、CDN 缓存等方式实现页面缓存。常见策略有：全页缓存、分段缓存、增量静态生成（ISR）、私有/公有缓存等。
+
+#### 详细原理
+
+- **HTTP 缓存头**：设置 Cache-Control、ETag、Last-Modified 等头部，控制浏览器和 CDN 缓存。
+- **服务端缓存**：用 Redis、内存等缓存热点页面或数据，减少数据库压力。
+- **CDN 缓存**：将 SSR 渲染结果缓存到 CDN 边缘节点，提升全球访问速度。
+- **增量静态生成（ISR）**：Next.js 支持按需重新生成静态页面，兼顾实时性和性能。
+- **分段缓存**：对页面的不同部分采用不同缓存策略（如 Edge SSR + API 缓存）。
+
+::: details HTTP 缓存头设置
+
+```js
+// pages/api/cache.js
+export default function handler(req, res) {
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
+  res.json({ time: Date.now() });
+}
+```
+
+:::
+
+::: details 服务端 Redis 缓存示例
+
+```js
+// 伪代码，需结合实际服务端环境
+import Redis from 'ioredis';
+const redis = new Redis();
+
+export async function getServerSideProps() {
+  const cacheKey = 'news:list';
+  let list = await redis.get(cacheKey);
+  if (!list) {
+    const res = await fetch('https://api.example.com/news');
+    list = await res.json();
+    await redis.set(cacheKey, JSON.stringify(list), 'EX', 60); // 缓存60秒
+  } else {
+    list = JSON.parse(list);
+  }
+  return { props: { list } };
+}
+```
+
+:::
+
+## 服务端渲染的优缺点分别是什么？
+
+### 核心答案
+
+优点：首屏渲染快、利于 SEO、支持动态数据、提升分享体验。  
+缺点：服务器压力大、响应速度受限于服务端、实现和部署复杂、部分交互需客户端二次渲染。
+
+#### 详细原理
+
+- **优点**：
+  - 首屏 HTML 由服务端生成，用户体验好。
+  - 搜索引擎可直接抓取完整内容，SEO 友好。
+  - 支持实时数据，适合新闻、社区等场景。
+  - 社交分享时能正确显示预览信息。
+- **缺点**：
+  - 每次请求都需服务端渲染，服务器压力大。
+  - 网络延迟、服务端性能影响响应速度。
+  - 需要处理服务端和客户端的同构问题，开发复杂度提升。
+  - 某些交互仍需客户端 JS 支持，需二次 hydration。
+
+## SSR 如何与 CDN 配合提升性能？
+
+### 核心答案
+
+SSR 可通过设置合适的 HTTP 缓存头，将渲染结果缓存到 CDN 边缘节点，实现全局加速和减轻源站压力。`Next.js` 支持与 Vercel、Cloudflare 等平台无缝集成。
+
+#### 详细原理
+
+- SSR 页面渲染后，设置 `s-maxage`、`stale-while-revalidate` 等缓存头，允许 CDN 缓存页面。
+- CDN 首次请求回源，后续请求直接命中边缘节点，极大提升响应速度。
+- 可结合 ISR（增量静态生成）实现页面自动更新和缓存失效。
+- 需注意动态内容、用户个性化页面不宜全局缓存。
+
+::: details CDN 缓存头设置示例
+
+```js
+// pages/api/with-cdn.js
+export default function handler(req, res) {
+  // s-maxage 只对 CDN 有效，public 允许所有缓存
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
+  res.json({ time: Date.now() });
+}
+```
+
+:::
+
+## SSR 如何处理全局状态管理（如 Redux、MobX）？
+
+### 核心答案
+
+SSR 下需在服务端创建独立的全局状态实例（如 Redux store），将初始状态通过 props 传递到客户端，客户端再用该初始状态进行 hydration，避免状态污染和数据不一致。
+
+#### 详细原理
+
+- 每次 SSR 请求都需新建一份 store，防止多用户间数据串联。
+- `getServerSideProps/getInitialProps` 获取数据后，将初始 state 作为 props 传递。
+- 客户端用该 state 初始化 store，实现同构。
+- 推荐使用 next-redux-wrapper 等库简化流程。
+
+::: details Redux 同构示例
+
+```js
+// store.js
+import { createStore } from 'redux';
+export const initializeStore = (preloadedState) => createStore(reducer, preloadedState);
+
+// pages/_app.js
+import { Provider } from 'react-redux';
+import { initializeStore } from '../store';
+
+function MyApp({ Component, pageProps }) {
+  const store = initializeStore(pageProps.initialReduxState);
+  return (
+    <Provider store={store}>
+      <Component {...pageProps} />
+    </Provider>
+  );
+}
+
+export default MyApp;
+
+// pages/index.js
+export async function getServerSideProps() {
+  const store = initializeStore();
+  // 假设 dispatch 异步 action 获取数据
+  await store.dispatch(fetchData());
   return {
     props: {
-      time: new Date().toLocaleString(),
+      initialReduxState: store.getState(),
     },
   };
 }
 ```
+
 :::
 
-
-## Next.js 的核心特性有哪些？
-
-**核心答案：**  
-Next.js 的核心特性包括：服务端渲染（SSR）、静态生成（SSG）、自动代码分割、文件系统路由、API 路由、图片优化、内置 CSS/静态资源支持、TypeScript 支持、增量静态生成（ISR）、中间件、SEO 优化等。
-
-**原理讲解：**  
-Next.js 通过 `pages` 目录实现自动路由，支持多种数据获取方式（如 SSR、SSG、ISR），自动为每个页面进行代码分割，提升加载速度。内置图片优化组件 `<Image>`，支持 CSS、Sass、CSS-in-JS 等多种样式方案。通过 API 路由可直接在项目中编写后端接口。支持 TypeScript 开箱即用，并通过中间件实现请求拦截和处理。所有这些特性让开发者能高效构建高性能、易维护的 Web 应用。
-
-::: details 示例代码
-```js
-// pages/about.js
-// 静态生成页面
-export default function About() {
-  return <div>关于我们</div>;
-}
-
-// pages/api/hello.js
-// API 路由示例
-export default function handler(req, res) {
-  res.status(200).json({ message: 'Hello from Next.js API Route!' });
-}
-
-// 使用图片优化
-// pages/index.js
-import Image from 'next/image';
-
-export default function Home() {
-  return (
-    <div>
-      <Image src="/logo.png" alt="Logo" width={120} height={60} />
-    </div>
-  );
-}
-```
-:::
-
-## Next.js 如何实现服务端渲染（SSR）？
-
-**核心答案：**  
-Next.js 通过在页面组件中导出 `getServerSideProps` 方法，实现服务端渲染。每次请求时，Next.js 会在服务器端执行该方法，获取数据后渲染页面并返回 HTML 给客户端。
-
-**原理讲解：**  
-SSR 的本质是在服务器端生成 HTML 内容，客户端直接接收到完整页面，提升首屏加载速度和 SEO。Next.js 在请求到达时调用 `getServerSideProps`，将返回的数据作为 props 传递给页面组件，最终由服务器渲染出 HTML 返回给浏览器。
-
-::: details 示例代码
-```js
-// pages/ssr-demo.js
-export default function SSRDemo({ data }) {
-  return (
-    <div>
-      <h2>服务端渲染示例</h2>
-      <p>数据：{data}</p>
-    </div>
-  );
-}
-
-// getServerSideProps 每次请求都会在服务端执行
-export async function getServerSideProps() {
-  // 这里可以请求数据库或第三方 API
-  const data = '这是服务端渲染的数据';
-  return { props: { data } };
-}
-```
-:::
-
-## Next.js 中的静态生成（SSG）和服务端渲染（SSR）有什么区别？
-
-**核心答案：**  
-SSG（静态生成）在构建时生成 HTML 文件，适合内容不频繁变动的页面；SSR（服务端渲染）在每次请求时动态生成 HTML，适合需要实时数据的页面。
-
-**原理讲解：**  
-SSG 通过 `getStaticProps`（和可选的 `getStaticPaths`）在构建时预渲染页面，生成静态文件，访问速度快、可被 CDN 缓存。SSR 通过 `getServerSideProps` 在每次请求时服务端渲染，适合需要实时数据的场景。两者都能提升 SEO，但适用场景不同。
-
-::: details 示例代码
-```js
-// SSG 示例
-// pages/static-demo.js
-export default function StaticDemo({ time }) {
-  return <div>页面生成时间：{time}</div>;
-}
-
-export async function getStaticProps() {
-  return {
-    props: { time: new Date().toLocaleString() },
-    // revalidate: 60, // ISR 增量静态生成
-  };
-}
-
-// SSR 示例见上一题
-```
-:::
- 
 ## getStaticProps、getServerSideProps 和 getInitialProps 有什么区别？
 
-**核心答案：**  
-- `getStaticProps`：用于静态生成（SSG），构建时运行，仅页面组件可用。
-- `getServerSideProps`：用于服务端渲染（SSR），每次请求时运行，仅页面组件可用。
-- `getInitialProps`：可用于页面和自定义 App，支持 SSR 和客户端渲染，但已不推荐使用。
+### 核心答案
 
-**原理讲解：**  
-`getStaticProps` 只在构建时执行，适合静态内容；`getServerSideProps` 每次请求都执行，适合动态内容；`getInitialProps` 兼容性强，但会影响自动静态优化，官方推荐优先使用前两者。
+- getStaticProps：构建时运行，生成静态页面（SSG）。
+- getServerSideProps：每次请求时服务端运行，生成动态页面（SSR）。
+- getInitialProps：页面首次加载和路由切换时都运行，支持 SSR 和 CSR，已不推荐使用。
 
-::: details 示例代码
+#### 详细原理
+
+- **getStaticProps**：仅在 build 阶段运行，适合静态内容，支持 ISR。
+- **getServerSideProps**：每次请求都运行，适合实时数据，不能用于静态导出。
+- **getInitialProps**：可在服务端和客户端运行，灵活但会影响性能，官方推荐用前两者替代。
+
+::: details 三者用法对比
+
 ```js
-// getStaticProps 示例
-export async function getStaticProps() {
-  return { props: { data: '静态数据' } };
-}
-
-// getServerSideProps 示例
-export async function getServerSideProps() {
-  return { props: { data: '服务端数据' } };
-}
-
-// getInitialProps 示例（不推荐）
-function Page({ data }) {
-  return <div>{data}</div>;
-}
-Page.getInitialProps = async () => {
-  return { data: '兼容性数据' };
-};
-export default Page;
-```
-:::
-
-## Next.js 的路由机制是怎样的？
-
-**核心答案：**  
-Next.js 采用基于文件系统的路由机制，`pages` 目录下的每个文件自动对应一个路由，支持嵌套路由、动态路由和 catch-all 路由。
-
-**原理讲解：**  
-在 `pages` 目录下创建的 `.js`、`.jsx`、`.ts`、`.tsx` 文件会自动成为路由页面。例如 `pages/about.js` 对应 `/about` 路由。通过方括号（如 `[id].js`）实现动态路由，通过 `[...slug].js` 实现 catch-all 路由。无需手动配置路由表，开发效率高。
-
-::: details 示例代码
-```js
-// pages/about.js -> /about
-// pages/blog/[id].js -> /blog/123
-// pages/docs/[...slug].js -> /docs/a/b/c
-
-// pages/blog/[id].js
-import { useRouter } from 'next/router';
-
-export default function BlogPost() {
-  const router = useRouter();
-  const { id } = router.query;
-  return <div>当前博客ID：{id}</div>;
-}
-```
-:::
-
-## 动态路由和 catch-all 路由如何实现？
-
-**核心答案：**  
-动态路由通过在 `pages` 目录下使用方括号命名（如 `[id].js`）实现；catch-all 路由通过 `[...param].js` 实现，支持多级路径匹配。
-
-**原理讲解：**  
-Next.js 解析 `pages` 目录下的 `[param].js` 文件，将 URL 中对应部分作为参数传递给页面。`[...param].js` 可匹配任意深度的路径片段，常用于文档、分类等多级路由场景。
-
-::: details 示例代码
-```js
-// pages/user/[id].js
-import { useRouter } from 'next/router';
-
-export default function User() {
-  const { id } = useRouter().query;
-  return <div>用户ID：{id}</div>;
-}
-
-// pages/docs/[...slug].js
-export default function Docs({ params }) {
-  return <div>路径参数：{JSON.stringify(params)}</div>;
-}
-
-export async function getStaticPaths() {
-  return { paths: [], fallback: 'blocking' };
-}
-
-export async function getStaticProps({ params }) {
-  return { props: { params } };
-}
-```
-:::
-
-
-
-## 如何在 Next.js 中实现 API 路由？
-
-**核心答案：**  
-在 Next.js 的 `pages/api` 目录下创建 JS/TS 文件即可自动成为 API 路由，每个文件导出一个处理函数，支持 RESTful 风格，适合处理后端逻辑、数据接口等。
-
-**原理讲解：**  
-Next.js 会将 `pages/api` 目录下的每个文件映射为一个 API 路由，文件名即为接口路径。导出的函数接收 `req` 和 `res` 两个参数，分别代表请求和响应对象。可以处理 GET、POST、PUT、DELETE 等 HTTP 方法，适合轻量级后端开发或前后端一体化项目。
-
-::: details 示例代码
-```js
-// pages/api/hello.js
-// 访问 /api/hello 时会执行此函数
-export default function handler(req, res) {
-  if (req.method === 'GET') {
-    res.status(200).json({ message: 'Hello, Next.js API!' });
-  } else {
-    res.status(405).json({ error: 'Method Not Allowed' });
-  }
-}
-```
-:::
-
-## Next.js 如何进行页面跳转和导航？
-
-**核心答案：**  
-Next.js 推荐使用内置的 `<Link>` 组件进行页面跳转，或使用 `useRouter` 钩子的 `push` 方法进行编程式导航。
-
-**原理讲解：**  
-`<Link>` 组件实现了客户端路由跳转，避免页面刷新，提升用户体验。`useRouter` 提供了路由对象，可以通过 `router.push`、`router.replace` 等方法在代码中实现跳转。两者都支持传递 query 参数和动态路由。
-
-::: details 示例代码
-```js
-// 使用 Link 组件跳转
-import Link from 'next/link';
-
-export default function Home() {
-  return (
-    <div>
-      <Link href="/about">
-        <a>跳转到关于页</a>
-      </Link>
-    </div>
-  );
-}
-
-// 编程式跳转
-import { useRouter } from 'next/router';
-
-export default function JumpButton() {
-  const router = useRouter();
-  return (
-    <button onClick={() => router.push('/contact')}>
-      跳转到联系页
-    </button>
-  );
-}
-```
-:::
-
-## 如何在 Next.js 中做数据预取（Data Fetching）？
-
-**核心答案：**  
-Next.js 支持三种数据预取方式：`getStaticProps`（静态生成）、`getServerSideProps`（服务端渲染）、`getInitialProps`（兼容模式），分别适用于不同的数据获取场景。
-
-**原理讲解：**  
-- `getStaticProps`：构建时获取数据，适合静态内容。
-- `getServerSideProps`：每次请求时获取数据，适合动态内容。
-- `getInitialProps`：页面和自定义 App 可用，兼容 SSR 和客户端渲染，但不推荐新项目使用。
-
-这些方法会在页面渲染前执行，将数据作为 props 传递给页面组件。
-
-::: details 示例代码
-```js
-// getStaticProps 示例
+// getStaticProps
 export async function getStaticProps() {
   const res = await fetch('https://api.example.com/posts');
   const posts = await res.json();
   return { props: { posts } };
 }
 
-// getServerSideProps 示例
+// getServerSideProps
 export async function getServerSideProps() {
-  const res = await fetch('https://api.example.com/user');
-  const user = await res.json();
-  return { props: { user } };
+  const res = await fetch('https://api.example.com/posts');
+  const posts = await res.json();
+  return { props: { posts } };
+}
+
+// getInitialProps（已不推荐）
+MyPage.getInitialProps = async (ctx) => {
+  const res = await fetch('https://api.example.com/posts');
+  const posts = await res.json();
+  return { posts };
+};
+```
+
+:::
+
+## Next.js 的路由机制是怎样的？
+
+### 核心答案
+
+Next.js 基于文件系统的路由机制，pages 目录下的每个文件自动对应一个路由，无需手动配置，支持嵌套路由、动态路由和 API 路由。
+
+#### 详细原理
+
+- pages 目录下的 `.js/.jsx/.ts/.tsx` 文件自动成为路由页面。
+- 文件名决定路由路径，如 `pages/about.js` 对应 `/about`。
+- 支持嵌套文件夹实现多级路由，如 `pages/blog/list.js` 对应 `/blog/list`。
+- 支持动态路由（[param].js）、`catch-all` 路由（[...slug].js）。
+- `pages/api` 目录下的文件自动成为 API 路由。
+
+::: details 路由机制示例
+
+```js
+// pages/about.js   =>  /about
+// pages/blog/list.js   =>  /blog/list
+// pages/posts/[id].js  =>  /posts/123
+// pages/docs/[...slug].js  =>  /docs/a/b/c
+```
+
+:::
+
+## 动态路由和 catch-all 路由如何实现？
+
+### 核心答案
+
+动态路由通过文件名中使用中括号 [param] 实现，catch-all 路由通过 [...param] 实现，可捕获多级路径参数。
+
+#### 详细原理
+
+- `[param].js`：匹配单个参数，如 `/posts/123`。
+- `[...param].js`：匹配多个参数，如 `/docs/a/b/c`。
+- getStaticPaths 可用于 SSG 下动态生成所有可能的路径。
+
+::: details 动态路由示例
+
+```js
+// pages/posts/[id].js
+import { useRouter } from 'next/router';
+
+export default function Post() {
+  const router = useRouter();
+  const { id } = router.query;
+  return <div>文章ID: {id}</div>;
 }
 ```
+
+:::
+
+::: details catch-all 路由示例
+
+```js
+// pages/docs/[...slug].js
+import { useRouter } from 'next/router';
+
+export default function Docs() {
+  const router = useRouter();
+  const { slug } = router.query;
+  return <div>路径参数: {JSON.stringify(slug)}</div>;
+}
+```
+
+:::
+
+## 如何在 Next.js 中实现 API 路由？
+
+### 核心答案
+
+在 `pages/api` 目录下创建 `JS/TS` 文件，每个文件自动成为一个 API 路由，支持 RESTful 风格，直接处理 `req/res`。
+
+#### 详细原理
+
+- `pages/api` 下的每个文件导出 handler 函数，接收 req、res 参数。
+- 支持 GET、POST、PUT、DELETE 等 HTTP 方法。
+- 可用于处理表单、鉴权、代理、数据聚合等后端逻辑。
+
+::: details API 路由示例
+
+```js
+// pages/api/hello.js
+export default function handler(req, res) {
+  if (req.method === 'GET') {
+    res.status(200).json({ message: 'Hello API!' });
+  } else {
+    res.status(405).end(); // Method Not Allowed
+  }
+}
+```
+
+:::
+
+## 如何在 Next.js 中做数据预取（Data Fetching）？
+
+### 核心答案
+
+Next.js 支持在页面级别通过 `getStaticProps`、`getServerSideProps`、`getInitialProps` 进行数据预取，也可在客户端用 SWR、React Query 等库进行数据请求和缓存，实现高效的数据获取和页面渲染。
+
+### 详细原理
+
+1. **getStaticProps（静态生成）**  
+   - 仅在构建时运行，预先获取数据，生成静态页面（SSG），适合内容不常变动的页面。
+   - 支持 ISR（增量静态生成），可定时重新生成页面。
+
+2. **getServerSideProps（服务端渲染）**  
+   - 每次请求时在服务端运行，实时获取数据，生成 HTML，适合需要最新数据的页面（SSR）。
+
+3. **getInitialProps（已不推荐）**  
+   - 可在服务端和客户端运行，页面首次加载和路由切换时都能获取数据，但会影响性能，官方推荐用前两者替代。
+
+4. **客户端数据请求**  
+   - 在组件内通过 `fetch`、`axios`、`SWR`、`React Query` 等库获取和缓存数据，适合交互性强、对 SEO 要求不高的场景。
+
+5. **API 路由**  
+   - 可通过 `pages/api` 目录自定义后端接口，前端通过这些接口进行数据预取。
+
+::: details getStaticProps 静态数据预取
+
+```js
+// pages/posts.js
+export async function getStaticProps() {
+  // 构建时请求数据
+  const res = await fetch('https://api.example.com/posts');
+  const posts = await res.json();
+  return { props: { posts } };
+}
+
+export default function Posts({ posts }) {
+  return (
+    <ul>
+      {posts.map(post => <li key={post.id}>{post.title}</li>)}
+    </ul>
+  );
+}
+```
+
+:::
+
+::: details getServerSideProps 服务端实时数据预取
+
+```js
+// pages/news.js
+export async function getServerSideProps() {
+  // 每次请求时服务端获取数据
+  const res = await fetch('https://api.example.com/news');
+  const news = await res.json();
+  return { props: { news } };
+}
+
+export default function News({ news }) {
+  return (
+    <ul>
+      {news.map(item => <li key={item.id}>{item.title}</li>)}
+    </ul>
+  );
+}
+```
+
+:::
+
+::: details 客户端数据请求（SWR 示例）
+
+```js
+// pages/profile.js
+import useSWR from 'swr';
+
+function fetcher(url) {
+  return fetch(url).then(res => res.json());
+}
+
+export default function Profile() {
+  const { data, error } = useSWR('/api/user', fetcher);
+
+  if (error) return <div>加载失败</div>;
+  if (!data) return <div>加载中...</div>;
+
+  return <div>用户名：{data.name}</div>;
+}
+```
+
+:::
+
+::: details API 路由结合数据预取
+
+```js
+// pages/api/user.js
+export default function handler(req, res) {
+  res.status(200).json({ name: '张三', age: 18 });
+}
+
+// pages/profile.js
+import useSWR from 'swr';
+
+export default function Profile() {
+  const { data } = useSWR('/api/user', url => fetch(url).then(res => res.json()));
+  return <div>用户名：{data?.name}</div>;
+}
+```
+
 :::
 
 ## Next.js 如何实现图片优化（Image Optimization）？
 
-**核心答案：**  
-Next.js 提供内置的 `<Image>` 组件，支持自动图片压缩、懒加载、自适应尺寸等优化功能，提升页面性能和加载速度。
+### 核心答案
 
-**原理讲解：**  
-`<Image>` 组件会根据设备分辨率和屏幕大小自动选择合适的图片尺寸，并支持懒加载和 WebP 格式。图片会通过 Next.js 的图片优化服务进行压缩和裁剪，减少带宽消耗。开发者只需指定图片源、宽高等参数即可。
+Next.js 提供内置的 `next/image` 组件，支持自动压缩、懒加载、自适应尺寸和格式转换，提升图片加载速度和 SEO。
 
-::: details 示例代码
+#### 详细原理
+
+- `next/image` 自动根据设备分辨率和屏幕尺寸生成多版本图片。
+- 支持 WebP、AVIF 等现代图片格式。
+- 默认开启懒加载，减少首屏压力。
+- 可自定义 loader 支持第三方图片源。
+
+::: details 图片优化示例
+
 ```js
 import Image from 'next/image';
 
 export default function Avatar() {
   return (
-    <div>
-      <Image
-        src="/avatar.png" // 本地图片或远程图片
-        alt="用户头像"
-        width={100}
-        height={100}
-        quality={80} // 图片质量，默认 75
-        placeholder="blur" // 支持模糊占位
-      />
-    </div>
+    <Image
+      src="/avatar.png"
+      alt="用户头像"
+      width={100}
+      height={100}
+      quality={80}
+      placeholder="blur"
+      blurDataURL="/avatar-blur.png"
+    />
   );
 }
 ```
+
 :::
 
 ## 如何配置自定义 Document 和 App？
 
-**核心答案：**  
-通过在 `pages` 目录下创建 `_document.js` 和 `_app.js` 文件，分别自定义 HTML 结构和全局应用逻辑，如全局样式、布局、状态管理等。
+### 核心答案
 
-**原理讲解：**  
-- `_document.js` 只在服务端渲染时运行，用于自定义 `<html>`、`<body>` 等标签，常用于引入字体、设置 meta。
-- `_app.js` 用于自定义页面初始化，可以包裹全局 Provider、引入全局 CSS、实现页面切换动画等。
+通过 `pages/_document.js` 自定义 HTML 结构和 meta 标签，通过 `pages/_app.js` 自定义全局样式、布局和状态管理。
 
-::: details 示例代码
+#### 详细原理
+
+- _document.js 只在服务端渲染时运行，可自定义 `<html>`、`<body>`、全局 meta、字体等。
+- _app.js 包裹所有页面组件，可引入全局 CSS、Provider、布局等。
+
+::: details 自定义 Document 示例
+
 ```js
 // pages/_document.js
-import Document, { Html, Head, Main, NextScript } from 'next/document';
+import { Html, Head, Main, NextScript } from 'next/document';
 
-export default class MyDocument extends Document {
-  render() {
-    return (
-      <Html lang="zh-CN">
-        <Head>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
+export default function Document() {
+  return (
+    <Html lang="zh">
+      <Head>
+        <link rel="icon" href="/favicon.ico" />
+        {/* 可添加全局 meta、字体等 */}
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  );
 }
+```
 
+:::
+
+::: details 自定义 App 示例
+
+```js
 // pages/_app.js
 import '../styles/globals.css';
 
 export default function MyApp({ Component, pageProps }) {
-  // 可以在这里包裹全局 Provider
   return <Component {...pageProps} />;
 }
 ```
+
 :::
 
 ## 如何在 Next.js 中使用中间件（Middleware）？
 
-**核心答案：**  
-Next.js 通过在项目根目录下创建 `middleware.js` 文件实现中间件功能，可在请求到达页面前拦截、重定向、鉴权等。
+### 核心答案
 
-**原理讲解：**  
-中间件运行在 Edge Runtime（边缘运行时），可对请求进行处理，如重定向、设置响应头、鉴权等。中间件支持基于路径的匹配，执行效率高，适合做全局拦截和安全控制。
+Next.js 通过 middleware.js 文件实现中间件功能，可在请求到达页面或 API 路由前进行重定向、鉴权、`A/B` 测试等操作。
 
-::: details 示例代码
+#### 详细原理
+
+- 在项目根目录或 app 目录下创建 middleware.js。
+- 中间件基于 Edge Runtime，运行在 CDN 边缘节点，性能高。
+- 可通过 NextResponse 重写、重定向、设置 header 等。
+
+::: details Middleware 示例
+
 ```js
 // middleware.js
 import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  // 简单的鉴权示例
+  // 简单鉴权示例
   const token = request.cookies.get('token');
   if (!token) {
-    // 未登录则重定向到登录页
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  // 允许请求继续
   return NextResponse.next();
 }
 
-// 可通过 matcher 精确控制中间件作用路径
+// 匹配特定路由
 export const config = {
   matcher: ['/dashboard/:path*'],
 };
 ```
-:::
 
+:::
 
 ## 如何在 Next.js 中实现国际化（i18n）？
 
-**核心答案：**  
-Next.js 通过在 `next.config.js` 配置 `i18n` 字段实现内置国际化支持，支持多语言路由、自动语言检测，也可结合第三方库（如 next-i18next）实现内容翻译。
+### 核心答案
 
-**原理讲解：**  
-在 `next.config.js` 中配置 `locales` 和 `defaultLocale`，Next.js 会自动为每种语言生成对应的路由前缀（如 `/en/about`、`/zh/about`）。可通过 `useRouter` 获取当前语言，结合第三方库实现内容多语言切换和翻译。
+Next.js 内置国际化支持，通过配置 `next.config.js` 的 i18n 字段实现多语言路由和切换，结合第三方库（如 `next-i18next`）实现内容翻译。
 
-::: details 示例代码
+#### 详细原理
+
+- 在 `next.config.js` 配置 `i18n.locales` 和 defaultLocale。
+- 页面路由自动带上语言前缀（如 /en、`/zh`）。
+- 可结合 `next-i18next`、`react-intl` 等库实现内容多语言切换和翻译。
+
+::: details 国际化配置示例
+
 ```js
 // next.config.js
 module.exports = {
   i18n: {
     locales: ['en', 'zh'],
     defaultLocale: 'zh',
-    localeDetection: true, // 自动检测用户语言
+  },
+};
+```
+
+:::
+
+::: details next-i18next 使用示例
+
+```js
+// 安装 next-i18next
+// npm install next-i18next
+
+// next-i18next.config.js
+module.exports = {
+  i18n: {
+    locales: ['en', 'zh'],
+    defaultLocale: 'zh',
   },
 };
 
-// pages/about.js
-import { useRouter } from 'next/router';
+// pages/_app.js
+import { appWithTranslation } from 'next-i18next';
+export default appWithTranslation(MyApp);
 
-export default function About() {
-  const { locale } = useRouter();
-  return (
-    <div>
-      {locale === 'zh' ? '关于我们' : 'About Us'}
-    </div>
-  );
+// 页面组件
+import { useTranslation } from 'next-i18next';
+
+export default function Home() {
+  const { t } = useTranslation('common');
+  return <h1>{t('welcome')}</h1>;
 }
 ```
-:::
 
-## 如何在 Next.js 中配置环境变量？
-
-**核心答案：**  
-在项目根目录下创建 `.env` 文件，定义环境变量，Next.js 会自动加载。以 `NEXT_PUBLIC_` 开头的变量可在客户端访问，其他变量仅服务端可用。
-
-**原理讲解：**  
-Next.js 支持 `.env`、`.env.local`、`.env.development`、`.env.production` 等多种环境变量文件。通过 `process.env.变量名` 访问。以 `NEXT_PUBLIC_` 开头的变量会被打包到前端代码中，适合公开信息。
-
-::: details 示例代码
-```env
-# .env
-API_SECRET=server_secret
-NEXT_PUBLIC_API_URL=https://api.example.com
-```
-
-```js
-// pages/env-demo.js
-export default function EnvDemo() {
-  return (
-    <div>
-      {/* 只能访问 NEXT_PUBLIC_ 开头的变量 */}
-      <p>API 地址：{process.env.NEXT_PUBLIC_API_URL}</p>
-    </div>
-  );
-}
-
-// 服务端代码可以访问所有变量
-export async function getServerSideProps() {
-  const secret = process.env.API_SECRET; // 仅服务端可用
-  return { props: {} };
-}
-```
 :::
 
 ## 如何在 Next.js 中做代码分割和懒加载？
 
-**核心答案：**  
-Next.js 默认对每个页面自动进行代码分割，并可通过 `next/dynamic` 实现组件级懒加载，提升首屏加载速度。
+### 核心答案
 
-**原理讲解：**  
-每个页面只加载自身依赖的 JS 代码，减少初始包体积。通过 `next/dynamic` 动态导入组件，按需加载，支持 SSR 和客户端渲染两种模式。可结合 loading 占位符优化用户体验。
+Next.js 默认基于路由自动实现代码分割，支持通过 `React.lazy`、`next/dynamic` 实现组件级懒加载，提升首屏加载速度和性能。
 
-::: details 示例代码
+#### 详细原理
+
+- 路由级代码分割：每个页面单独打包，访问哪个页面只加载对应 JS。
+- 组件级懒加载：用 `next/dynamic` 或 `React.lazy` 按需加载大组件或第三方库。
+- 支持 SSR 的动态加载（`next/dynamic`），可配置 loading 占位符、SSR 开关等。
+
+::: details 路由级代码分割
+
 ```js
-// 动态导入组件
+// pages/about.js 只在访问 /about 时加载
+export default function About() {
+  return <div>关于我们</div>;
+}
+```
+
+:::
+
+::: details 组件级懒加载（`next/dynamic`）
+
+```js
 import dynamic from 'next/dynamic';
 
-const DynamicComponent = dynamic(() => import('../components/HeavyComponent'), {
+const Chart = dynamic(() => import('../components/Chart'), {
   loading: () => <p>加载中...</p>,
-  ssr: false, // 只在客户端渲染
+  ssr: false, // 只在客户端加载
 });
 
-export default function Page() {
+export default function Dashboard() {
   return (
     <div>
-      <h2>首页</h2>
-      <DynamicComponent />
+      <h1>仪表盘</h1>
+      <Chart />
     </div>
   );
 }
 ```
+
 :::
-
-## 如何在 Next.js 中集成 CSS、Sass、Styled-components 等样式方案？
-
-**核心答案：**  
-Next.js 支持多种样式方案：全局 CSS、CSS Modules、Sass、CSS-in-JS（如 styled-components、emotion），可根据需求灵活选择和集成。
-
-**原理讲解：**  
-- 全局 CSS 需在 `_app.js` 中引入。
-- CSS Modules 通过 `xxx.module.css` 文件实现局部样式隔离。
-- 安装 `sass` 包后可直接使用 `.scss`/`.sass` 文件。
-- styled-components/emotion 等 CSS-in-JS 方案需额外配置 Babel 插件和自定义 Document 以支持 SSR。
-
-::: details 示例代码
-```js
-// 全局 CSS：在 pages/_app.js 中引入
-import '../styles/globals.css';
-
-// CSS Modules：组件内引入
-import styles from './Home.module.css';
-export default function Home() {
-  return <div className={styles.title}>首页</div>;
-}
-
-// Sass：安装 sass 后直接引入 .scss 文件
-import '../styles/main.scss';
-
-// styled-components 示例
-import styled from 'styled-components';
-const Button = styled.button`
-  color: white;
-  background: #0070f3;
-`;
-export default function StyledBtn() {
-  return <Button>按钮</Button>;
-}
-```
-:::
-
-## 如何部署 Next.js 应用？常见的部署平台有哪些？
-
-**核心答案：**  
-Next.js 应用可部署到 Vercel、Netlify、阿里云、腾讯云、传统服务器等平台。Vercel 是官方推荐平台，支持一键部署和自动化构建。
-
-**原理讲解：**  
-Next.js 支持多种部署模式：静态导出（`next export`）、Node.js 服务器（`next start`）、Serverless/FaaS。Vercel、Netlify 支持自动化部署和预览，云服务器可通过 Docker 或 PM2 部署。根据项目需求选择合适的部署方式。
-
-::: details 示例代码
-```bash
-# Vercel 部署（推荐）
-npm i -g vercel
-vercel
-
-# 传统服务器部署
-npm run build
-npm start
-
-# 静态导出
-npm run build
-npm run export
-# 导出的静态文件在 out 目录，可部署到任意静态托管平台
-```
-:::
-
 
 ## Next.js 如何与后端 API 进行交互？
 
-**核心答案：**  
-Next.js 可以在服务端（如 `getServerSideProps`、`getStaticProps`、API 路由）或客户端（如 `useEffect`）通过 fetch/axios 等方式与后端 API 交互，实现数据获取和提交。
+### 核心答案
 
-**原理讲解：**  
-- 服务端数据获取：在 `getServerSideProps` 或 `getStaticProps` 中直接请求后端 API，数据在页面渲染前获取，适合 SSR/SSG 场景。
-- 客户端数据获取：在组件内通过 `useEffect` 等钩子请求 API，适合用户交互后动态获取数据。
-- API 路由：可将 Next.js 作为 BFF（后端 for 前端），在 `pages/api` 下编写接口，前端通过 `/api/xxx` 访问。
+Next.js 可在服务端（getServerSideProps、API 路由）和客户端（fetch、axios、SWR）与后端 API 交互，支持同构请求和数据预取。
 
-::: details 示例代码
+#### 详细原理
+
+- 服务端数据获取：在 getServerSideProps、getStaticProps、API 路由中用 `fetch/axios` 请求后端 API。
+- 客户端数据获取：在组件内用 `fetch/axios/SWR/React Query` 请求 API。
+- API 路由可作为前后端中转，处理鉴权、聚合等逻辑。
+
+::: details 服务端 API 交互
+
 ```js
-// 服务端获取数据
 export async function getServerSideProps() {
   const res = await fetch('https://api.example.com/user');
   const user = await res.json();
   return { props: { user } };
 }
-
-// 客户端获取数据
-import { useEffect, useState } from 'react';
-export default function ClientFetch() {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    fetch('/api/hello')
-      .then(res => res.json())
-      .then(setData);
-  }, []);
-  return <div>{data ? data.message : '加载中...'}</div>;
-}
 ```
+
 :::
 
-## 如何在 Next.js 中实现 SEO 优化？
+::: details 客户端 API 交互
 
-**核心答案：**  
-Next.js 支持服务端渲染和静态生成，提升页面可被搜索引擎抓取的能力，并可通过 `next/head` 组件灵活设置页面 title、meta、OG 等 SEO 信息。
-
-**原理讲解：**  
-SSR/SSG 让页面 HTML 在服务端生成，搜索引擎可直接抓取内容。`next/head` 允许在每个页面自定义 SEO 标签。还可结合 sitemap、robots.txt、结构化数据等进一步优化 SEO。
-
-::: details 示例代码
 ```js
-import Head from 'next/head';
+import useSWR from 'swr';
 
-export default function SEOPage() {
-  return (
-    <>
-      <Head>
-        <title>Next.js SEO 优化示例</title>
-        <meta name="description" content="这是一个 Next.js SEO 优化页面" />
-        <meta property="og:title" content="Next.js SEO" />
-      </Head>
-      <div>内容区域</div>
-    </>
-  );
+function Profile() {
+  const { data } = useSWR('/api/user', url => fetch(url).then(res => res.json()));
+  return <div>用户名：{data?.name}</div>;
 }
 ```
+
 :::
 
 ## Next.js 的 ISR（增量静态生成）是什么？如何使用？
 
-**核心答案：**  
-ISR（Incremental Static Regeneration，增量静态生成）允许 Next.js 在构建后按需、定时地重新生成静态页面，实现静态与动态的结合，提升性能和实时性。
+### 核心答案
 
-**原理讲解：**  
-通过在 `getStaticProps` 返回对象中设置 `revalidate` 字段，Next.js 会在页面被访问时，后台异步重新生成页面并缓存，保证数据的时效性和高性能。适合内容频繁变动但不要求实时的场景。
+ISR（Incremental Static Regeneration）允许 Next.js 在构建后按需、定时重新生成静态页面，兼顾静态性能和动态内容更新。
 
-::: details 示例代码
+#### 详细原理
+
+- 通过 getStaticProps 返回 revalidate 字段，指定页面多久自动重新生成一次。
+- 用户访问页面时，如果页面过期，Next.js 后台异步重新生成并缓存新页面。
+- 适合内容频繁更新但不要求实时的场景，如博客、商品页。
+
+::: details ISR 示例
+
 ```js
-// pages/isr-demo.js
-export default function ISRDemo({ time }) {
-  return <div>页面生成时间：{time}</div>;
-}
-
 export async function getStaticProps() {
+  const res = await fetch('https://api.example.com/posts');
+  const posts = await res.json();
   return {
-    props: { time: new Date().toLocaleString() },
-    revalidate: 10, // 每 10 秒重新生成一次页面
+    props: { posts },
+    revalidate: 60, // 每60秒自动重新生成
   };
 }
 ```
-:::
 
-## 如何在 Next.js 中处理 404 和自定义错误页面？
-
-**核心答案：**  
-在 `pages` 目录下创建 `404.js` 和 `500.js` 文件，分别自定义 404（未找到）和 500（服务器错误）页面，Next.js 会自动识别并渲染。
-
-**原理讲解：**  
-`404.js` 用于处理未匹配到的路由，`500.js` 用于处理运行时错误。可自定义页面内容、样式和跳转逻辑，提升用户体验。
-
-::: details 示例代码
-```js
-// pages/404.js
-export default function Custom404() {
-  return <h1>404 - 页面未找到</h1>;
-}
-
-// pages/500.js
-export default function Custom500() {
-  return <h1>500 - 服务器内部错误</h1>;
-}
-```
 :::
 
 ## Next.js 的构建流程是怎样的？
 
-**核心答案：**  
-Next.js 构建流程包括：分析 pages 目录、预渲染页面（SSG/SSR）、生成静态资源、打包 JS/CSS、输出构建产物，最终可通过 `next start` 启动生产环境服务。
+### 核心答案
 
-**原理讲解：**  
-- 解析 `pages` 目录，生成路由映射。
-- 执行 `getStaticProps`/`getStaticPaths` 生成静态页面，执行 `getServerSideProps` 配置 SSR 页面。
-- 自动代码分割，优化资源加载。
-- 输出 `.next` 目录，包含所有构建产物。
-- 生产环境通过 `next start` 启动，支持 SSR/SSG/ISR。
+Next.js 构建流程包括：分析 pages 目录、预渲染静态页面（SSG）、生成服务端渲染入口（SSR）、打包 `JS/CSS`、输出 .next 目录。
 
-::: details 示例代码
+#### 详细原理
+
+1. 解析 pages 目录，确定所有路由和数据获取方式。
+2. 对 `getStaticProps/getStaticPaths` 页面进行静态生成，输出 HTML/JSON。
+3. 对 getServerSideProps 页面生成 SSR 入口。
+4. 打包所有页面和组件 JS/CSS，自动代码分割。
+5. 输出到 .next 目录，供生产环境部署。
+
+::: details 构建流程命令
+
 ```bash
-# 构建命令
+# 构建
 npm run build
-# 产物在 .next 目录
-# 启动生产环境
-npm start
+
+# 生成的 .next 目录结构
+.next/
+  ├─ static/      # 静态资源
+  ├─ server/      # SSR 入口
+  ├─ cache/       # 缓存
+  └─ ...
 ```
+
 :::
 
-## 如何在 Next.js 中使用 TypeScript？
+## SSR 项目部署时需要注意哪些问题？
 
-**核心答案：**  
-在 Next.js 项目根目录下添加 `tsconfig.json` 或将页面/组件文件扩展名改为 `.ts`/`.tsx`，Next.js 会自动检测并集成 TypeScript，支持类型检查和类型推导。
+### 核心答案
 
-**原理讲解：**  
-首次引入 TypeScript 文件时，Next.js 会自动生成 `tsconfig.json` 并安装依赖。页面、组件、API 路由均可使用 TypeScript，提升开发体验和代码质量。
+SSR 项目需保证 Node.js 服务器稳定运行，注意环境变量、API 跨域、缓存策略、CDN 配置、日志监控和安全性。
 
-::: details 示例代码
-```tsx
-// pages/index.tsx
-import type { NextPage } from 'next';
+#### 详细原理
 
-interface Props {
-  title: string;
-}
+- 需部署 Node.js 服务器（如 Vercel、PM2、Docker）。
+- 配置 process.env 环境变量，避免敏感信息泄露。
+- 处理 API 跨域（CORS）、HTTPS、Cookie 等问题。
+- 配置 CDN 缓存和反向代理，提升性能。
+- 日志监控、自动重启、异常报警，保证高可用。
+- 防止 SSR 注入、XSS、CSRF 等安全风险。
 
-const Home: NextPage<Props> = ({ title }) => (
-  <h1>{title}</h1>
-);
+## Next.js 是什么？它与 React 有什么关系？Next.js 的核心特性有哪些？
 
-export async function getStaticProps() {
-  return { props: { title: 'TypeScript 支持' } };
-}
+### 核心答案
 
-export default Home;
-```
-:::
+Next.js 是基于 React 的服务端渲染和静态网站生成框架，提供路由、数据预取、SSR/SSG/ISR、API 路由、图片优化等核心特性，极大提升 React 项目的开发效率和性能。
+
+#### 详细原理
+
+- Next.js 封装了 React，提供零配置的路由、数据获取、构建优化。
+- 支持多种渲染模式（`SSR/SSG/CSR/ISR`）。
+- 内置 API 路由、图片优化、国际化、代码分割等功能。
+- 与 React 生态无缝兼容，支持所有 React 组件和 Hooks。
 
 ## Next.js 新特性有哪些？（如 App Router、Server Components 等）
 
-**核心答案：**  
-Next.js 13+ 引入了 App Router（基于 `app` 目录的新路由系统）、React Server Components、Layout 机制、Streaming SSR、内置中间件等新特性，提升开发体验和性能。
+### 核心答案
 
-**原理讲解：**  
-- App Router：基于 `app` 目录，支持嵌套路由、布局、服务端组件等。
-- Server Components：允许在服务端渲染组件，减少客户端 JS 体积。
-- Layouts：支持页面级布局复用。
-- Streaming SSR：支持流式渲染，提升大页面首屏速度。
-- 内置中间件和更灵活的数据获取方式。
+Next.js 新特性包括 App Router（基于 app 目录的新路由机制）、React Server Components、Layout 组件、并发渲染、Edge Middleware、增强的图片和字体优化等。
 
-::: details 示例代码
-```tsx
-// app/page.tsx (App Router 示例)
-export default function Page() {
-  return <h1>App Router 首页</h1>;
+#### 详细原理
+
+- **App Router**：基于 app 目录，支持嵌套布局、并发渲染、文件级路由。
+- **Server Components**：组件可在服务端渲染，减少客户端 JS 体积。
+- **Layout 组件**：支持页面级和嵌套路由的布局复用。
+- **Edge Middleware**：在 CDN 边缘节点运行中间件，提升性能。
+- **增强图片/字体优化**：更高效的资源加载和自定义。
+
+::: details App Router 示例
+
+```js
+// app/page.js  =>  /
+export default function HomePage() {
+  return <h1>首页</h1>;
 }
 
-// app/layout.tsx (布局)
-export default function Layout({ children }) {
-  return (
-    <html>
-      <body>
-        <header>头部</header>
-        {children}
-        <footer>底部</footer>
-      </body>
-    </html>
-  );
-}
-
-// Server Component 示例
-// app/server-component.tsx
-export default async function ServerComponent() {
-  const res = await fetch('https://api.example.com/data', { cache: 'no-store' });
-  const data = await res.json();
-  return <div>{data.value}</div>;
+// app/blog/[id]/page.js  =>  /blog/123
+export default function BlogDetail({ params }) {
+  return <div>博客ID: {params.id}</div>;
 }
 ```
+
 :::
 
+## Next.js 的核心特性有哪些？
+
+### 核心答案
+
+Next.js 核心特性包括：文件系统路由、`SSR/SSG/ISR`、API 路由、图片优化、代码分割、国际化、TypeScript 支持、App Router、Server Components 等。
+
+#### 详细原理
+
+- 零配置路由和页面自动代码分割。
+- 多种渲染模式灵活切换。
+- 内置 API 路由和中间件。
+- 静态资源和图片优化。
+- 支持 TypeScript、CSS/SCSS、Tailwind 等主流技术。
+- 新版 App Router 和 Server Components 提升开发体验和性能。
