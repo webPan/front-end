@@ -43,8 +43,6 @@ export default Counter;
 
 虚拟 DOM 是对真实 DOM 的一次抽象表示，每当组件状态发生变化时，React 会生成新的虚拟 DOM 树，然后与上一次的虚拟 DOM 树进行对比（Diff），找出变化的部分，最后只将这些变化应用到真实 DOM。由于操作真实 DOM 的代价较高，而操作 JavaScript 对象的速度很快，这样可以显著提升性能，避免了频繁的、全量的 DOM 重绘。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -68,6 +66,143 @@ export default Demo;
 
 每次点击按钮，`text` 状态变化，React 会生成新的虚拟 DOM，和旧的虚拟 DOM 对比后，只更新 `<p>` 标签的内容，而不会重新渲染整个 DOM 结构。
 
+### React 18 生命周期方法有哪些？各自何时触发？
+
+- **挂载阶段**：组件首次渲染到DOM时
+  - `constructor()`：初始化state和绑定方法
+  - `static getDerivedStateFromProps()`：根据props更新state
+  - `render()`：渲染UI
+  - `componentDidMount()`：DOM渲染完成后执行操作
+
+- **更新阶段**：props或state变化时
+  - `static getDerivedStateFromProps()`：同上，但在更新时调用
+  - `shouldComponentUpdate()`：决定是否需要重新渲染
+  - `render()`：重新渲染UI
+  - `getSnapshotBeforeUpdate()`：在DOM更新前获取信息
+  - `componentDidUpdate()`：DOM更新完成后执行操作
+
+- **卸载阶段**：组件从DOM中移除时
+  - `componentWillUnmount()`：执行清理操作
+
+- **错误处理**：渲染过程中出错时
+  - `static getDerivedStateFromError()`：渲染备用UI
+  - `componentDidCatch()`：记录错误信息
+
+### 原理与使用场景
+
+:::details 挂载阶段
+
+组件被创建并插入DOM的过程：
+
+```jsx
+class MyComponent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { count: 0 };
+    // 初始化状态和绑定方法的地方
+  }
+  
+  static getDerivedStateFromProps(props, state) {
+    // 根据props计算并返回新的state
+    if (props.initialCount !== state.count) {
+      return { count: props.initialCount };
+    }
+    return null; // 不更新state则返回null
+  }
+  
+  componentDidMount() {
+    // 组件挂载后执行，适合：
+    // - 网络请求获取数据
+    // - 添加事件监听器
+    // - 设置定时器
+    fetch('https://api.example.com/data')
+      .then(response => response.json())
+      .then(data => this.setState({ data }));
+  }
+  
+  render() {
+    // 返回要渲染的JSX
+    return <div>Count: {this.state.count}</div>;
+  }
+}
+```
+
+:::
+
+:::details 更新阶段
+
+当props或state变化时，组件重新渲染的过程：
+
+```jsx
+class UpdateComponent extends React.Component {
+  shouldComponentUpdate(nextProps, nextState) {
+    // 性能优化：决定是否需要重新渲染
+    // 返回false则跳过本次渲染
+    return nextProps.value !== this.props.value;
+  }
+  
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    // 在DOM更新前捕获一些信息（如滚动位置）
+    if (prevProps.list.length < this.props.list.length) {
+      const list = this.listRef.current;
+      return list.scrollHeight - list.scrollTop;
+    }
+    return null;
+  }
+  
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // DOM已更新，可以：
+    // - 对比新旧props进行操作
+    // - 使用getSnapshotBeforeUpdate返回的值
+    if (snapshot !== null) {
+      this.listRef.current.scrollTop = 
+        this.listRef.current.scrollHeight - snapshot;
+    }
+  }
+}
+```
+
+:::
+
+::: details 卸载和错误处理
+
+```jsx
+class CleanupComponent extends React.Component {
+  componentWillUnmount() {
+    // 组件卸载前执行清理操作：
+    // - 清除定时器
+    // - 取消网络请求
+    // - 移除事件监听器
+    document.removeEventListener('click', this.handleClick);
+    clearInterval(this.intervalId);
+  }
+}
+
+class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+  
+  static getDerivedStateFromError(error) {
+    // 更新state以显示备用UI
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, info) {
+    // 记录错误信息
+    console.error('Error caught:', error, info);
+    // 可以将错误上报给服务器
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return <h1>出错了，请稍后再试</h1>;
+    }
+    return this.props.children;
+  }
+}
+```
+
+:::
+
 ## React 组件有哪几种？分别有什么区别？
 
 ### 核心答案
@@ -79,8 +214,6 @@ React 组件主要分为函数组件和类组件。函数组件是用函数声�
 - **函数组件**：本质是一个接收 props 并返回 React 元素的普通函数。自从 Hooks 出现后，函数组件也能拥有自己的状态和副作用逻辑。
 - **类组件**：通过继承 `React.Component` 创建，可以使用生命周期方法（如 `componentDidMount`、`componentDidUpdate` 等）和 `this.state` 管理状态。
 - 现在推荐优先使用函数组件，因其语法更简洁，逻辑复用性更强。
-
-
 
 ::: details 示例代码
 
@@ -106,47 +239,6 @@ class Hello extends Component {
 
 :::
 
-## 组件的生命周期有哪些阶段？常用的生命周期方法有哪些？各自何时触发？
-
-### 核心答案
-
-React 组件生命周期分为挂载（Mounting）、更新（Updating）、卸载（Unmounting）三个阶段。常用生命周期方法有：`componentDidMount`（挂载后）、`componentDidUpdate`（更新后）、`componentWillUnmount`（卸载前）等。
-
-### 原理讲解
-
-- **挂载阶段**：组件被创建并插入 DOM，包括 `constructor`、`componentDidMount`。
-- **更新阶段**：组件的 props 或 state 发生变化时，包括 `shouldComponentUpdate`、`componentDidUpdate`。
-- **卸载阶段**：组件从 DOM 中移除时，触发 `componentWillUnmount`。
-- 新的函数组件通过 `useEffect` 模拟这些生命周期。
-
-
-
-::: details 示例代码
-
-```jsx
-import React, { Component } from 'react';
-
-class Demo extends Component {
-  componentDidMount() {
-    console.log('组件挂载完成');
-  }
-
-  componentDidUpdate() {
-    console.log('组件更新完成');
-  }
-
-  componentWillUnmount() {
-    console.log('组件即将卸载');
-  }
-
-  render() {
-    return <div>生命周期示例</div>;
-  }
-}
-```
-
-:::
-
 ## 什么是受控组件和非受控组件？
 
 ### 核心答案
@@ -157,8 +249,6 @@ class Demo extends Component {
 
 - **受控组件**：表单元素的 value 受 React state 控制，所有数据流都在 React 内部，便于统一管理和校验。
 - **非受控组件**：表单元素的值存储在 DOM 节点中，通常通过 ref 获取，适合简单场景或与第三方库集成。
-
-
 
 ::: details 示例代码
 
@@ -194,40 +284,56 @@ function UncontrolledInput() {
 
 ## React 中如何实现父子组件通信？兄弟组件通信呢？
 
-### 核心答案
+**核心答案**
 
-父子组件通信通过 props 传递，父组件将数据或回调函数作为 props 传递给子组件。兄弟组件通信通常通过提升状态到它们的共同父组件，或借助全局状态管理（如 Context、Redux）实现。
+React 中父子组件通信主要通过 props 实现，父组件通过 props 向子组件传递数据或回调函数。兄弟组件通信通常通过“状态提升”到它们的共同父组件，再由父组件通过 props 分发，或者借助 Context、Redux 等全局状态管理工具实现。
 
-### 原理讲解
+**原理讲解**
 
-- **父传子**：父组件通过 props 向子组件传递数据或函数，子组件通过 props 接收。
-- **子传父**：父组件将回调函数作为 props 传递给子组件，子组件调用该函数并传递数据，实现向父组件通信。
-- **兄弟通信**：将需要共享的数据提升到最近的共同父组件，由父组件统一管理并通过 props 分发给各个子组件；或者使用 Context、Redux 等全局状态管理工具。
-
-
+- **父传子**：父组件将数据或函数作为 props 传递给子组件，子组件通过 props 接收和使用，实现数据下传或事件回调。
+- **子传父**：父组件将回调函数作为 props 传递给子组件，子组件在需要时调用该函数并传递数据，实现向父组件“上报”信息。
+- **兄弟通信**：
+  - **状态提升**：将需要共享的数据提升到最近的共同父组件，由父组件统一管理状态，并通过 props 分发给各个子组件。这样兄弟组件间可以间接通信。
+  - **全局状态管理**：对于更复杂的通信需求，可以使用 Context、Redux 等全局状态管理工具，实现跨层级、跨兄弟组件的数据共享和通信。
 
 ::: details 示例代码
 
-**父传子、子传父：**
-
 ```jsx
-function Child({ onClick }) {
-  return <button onClick={() => onClick('来自子组件的数据')}>点我</button>;
+// 父传子、子传父通信
+import React, { useState } from 'react';
+
+// 子组件，接收父组件传递的回调
+function Child({ onSend }) {
+  return (
+    <button onClick={() => onSend('来自子组件的数据')}>
+      点我向父组件传递数据
+    </button>
+  );
 }
 
+// 父组件
 function Parent() {
-  const handleChildClick = (data) => {
-    alert(data);
+  const handleChildSend = (data) => {
+    alert('父组件收到：' + data);
   };
-  return <Child onClick={handleChildClick} />;
+  return (
+    <div>
+      <Child onSend={handleChildSend} />
+    </div>
+  );
 }
 ```
 
-**兄弟通信（状态提升）：**
-
 ```jsx
+// 兄弟组件通信（状态提升）
+import React, { useState } from 'react';
+
 function SiblingA({ onChange }) {
-  return <button onClick={() => onChange('A的数据')}>A 发送</button>;
+  return (
+    <button onClick={() => onChange('A的数据')}>
+      A 发送数据
+    </button>
+  );
 }
 
 function SiblingB({ data }) {
@@ -237,10 +343,41 @@ function SiblingB({ data }) {
 function Parent() {
   const [data, setData] = useState('');
   return (
-    <>
+    <div>
       <SiblingA onChange={setData} />
       <SiblingB data={data} />
-    </>
+    </div>
+  );
+}
+```
+
+```jsx
+// 兄弟组件通信（Context 示例）
+import React, { createContext, useContext, useState } from 'react';
+
+const DataContext = createContext();
+
+function SiblingA() {
+  const { setData } = useContext(DataContext);
+  return (
+    <button onClick={() => setData('A通过Context发送的数据')}>
+      A 通过Context发送
+    </button>
+  );
+}
+
+function SiblingB() {
+  const { data } = useContext(DataContext);
+  return <div>B 通过Context接收到：{data}</div>;
+}
+
+function Parent() {
+  const [data, setData] = useState('');
+  return (
+    <DataContext.Provider value={{ data, setData }}>
+      <SiblingA />
+      <SiblingB />
+    </DataContext.Provider>
   );
 }
 ```
@@ -256,8 +393,6 @@ function Parent() {
 ### 原理讲解
 
 React 会将多次 `setState` 操作合并为一次批量更新，提升性能。在 React 的合成事件和生命周期方法中，`setState` 不会立即更新 state，而是将更新放入队列，等事件循环结束后统一执行。但在原生事件或定时器中，`setState` 会同步执行。
-
-
 
 ::: details 示例代码
 
@@ -282,30 +417,148 @@ function Demo() {
 
 ### 核心答案
 
-常见优化方式包括：使用 React.memo、useMemo、useCallback 避免不必要的渲染，合理设置 key，代码分割与懒加载，避免匿名函数和不必要的 state，使用虚拟列表等。
+优化 React 应用性能的常见方法包括：使用 React.memo、useMemo、useCallback 避免不必要的渲染，合理拆分组件，使用虚拟列表（如 react-window）、代码分割与懒加载（React.lazy/Suspense），避免匿名函数和不必要的 state，合理设置 key，减少重渲染范围，利用 PureComponent/shouldComponentUpdate，按需加载资源等。
 
 ### 原理讲解
 
-- **组件缓存**：用 React.memo、useMemo、useCallback 缓存组件和函数，减少重复渲染。
-- **代码分割**：利用 React.lazy 和 Suspense 实现按需加载，减少首屏体积。
-- **虚拟列表**：如 react-window、react-virtualized 只渲染可视区域的列表项。
-- **避免匿名函数**：每次渲染都会生成新函数，可能导致子组件重复渲染。
-- **合适的 key**：避免因为 key 不唯一或变化导致的无效渲染。
+1. **组件缓存与避免重复渲染**  
+   - 使用 `React.memo` 对函数组件进行 props 浅比较，只有 props 变化时才重新渲染。
+   - `useMemo` 缓存计算结果，`useCallback` 缓存函数引用，防止因父组件渲染导致子组件重复渲染。
+   - 类组件可用 `PureComponent` 或重写 `shouldComponentUpdate`。
 
+2. **代码分割与懒加载**  
+   - 利用 `React.lazy` 和 `Suspense` 实现组件级按需加载，减少首屏体积。
+   - 路由级代码分割可结合 Webpack 动态 import。
 
+3. **虚拟列表**  
+   - 对长列表只渲染可视区域（如 `react-window`、`react-virtualized`），大幅减少 DOM 数量。
 
-::: details 示例代码
+4. **避免匿名函数和不必要的 state**  
+   - 每次渲染生成新函数会导致子组件重新渲染，建议用 useCallback 或将函数定义在组件外部。
+   - 只将真正需要响应 UI 的数据放入 state，避免无关数据引发渲染。
+
+5. **合理设置 key**  
+   - key 唯一且稳定，避免因 key 变化导致的无效渲染。
+
+6. **合并/批量更新**  
+   - 利用 React 的批量更新机制，减少渲染次数。
+
+7. **按需加载资源**  
+   - 图片、第三方库等资源按需加载，减少初始加载压力。
+
+### 示例代码
+
+::: details 组件缓存与避免重复渲染
 
 ```jsx
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 
-const List = React.memo(({ items }) => {
-  return items.map(item => <div key={item.id}>{item.value}</div>);
+// 子组件用 React.memo 包裹，避免无关渲染
+const List = React.memo(({ items, onItemClick }) => {
+  return items.map(item => (
+    <div key={item.id} onClick={() => onItemClick(item.id)}>
+      {item.value}
+    </div>
+  ));
 });
 
 function App({ data }) {
+  // useMemo 缓存过滤结果
   const filtered = useMemo(() => data.filter(item => item.active), [data]);
-  return <List items={filtered} />;
+  // useCallback 缓存函数引用
+  const handleItemClick = useCallback((id) => {
+    console.log('点击了', id);
+  }, []);
+
+  return <List items={filtered} onItemClick={handleItemClick} />;
+}
+```
+
+:::
+
+::: details 代码分割与懒加载
+
+```jsx
+import React, { Suspense, lazy } from 'react';
+
+const LazyComponent = lazy(() => import('./LazyComponent'));
+
+function App() {
+  return (
+    <Suspense fallback={<div>加载中...</div>}>
+      <LazyComponent />
+    </Suspense>
+  );
+}
+```
+
+:::
+
+::: details 虚拟列表（react-window 示例）
+
+```jsx
+import { FixedSizeList as List } from 'react-window';
+
+const Row = ({ index, style }) => (
+  <div style={style}>Row {index}</div>
+);
+
+function VirtualizedList() {
+  return (
+    <List
+      height={400}
+      itemCount={10000}
+      itemSize={35}
+      width={300}
+    >
+      {Row}
+    </List>
+  );
+}
+```
+
+:::
+
+::: details 合理设置 key
+
+```jsx
+const items = [
+  { id: 1, name: 'A' },
+  { id: 2, name: 'B' }
+];
+
+function Demo() {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+:::
+
+::: details PureComponent/shouldComponentUpdate 优化
+
+```jsx
+import React, { PureComponent } from 'react';
+
+class Demo extends PureComponent {
+  render() {
+    return <div>{this.props.value}</div>;
+  }
+}
+
+// 或者自定义 shouldComponentUpdate
+class Custom extends React.Component {
+  shouldComponentUpdate(nextProps) {
+    return nextProps.value !== this.props.value;
+  }
+  render() {
+    return <div>{this.props.value}</div>;
+  }
 }
 ```
 
@@ -320,8 +573,6 @@ key 用于唯一标识列表中的每一个元素，帮助 React 更高效地识
 ### 原理讲解
 
 在渲染列表时，React 通过 key 判断哪些元素需要复用、哪些需要新建或删除。如果没有 key 或 key 不唯一，React 会采用默认的索引，可能导致不必要的 DOM 更新，影响性能和组件状态。
-
-
 
 ::: details 示例代码
 
@@ -350,8 +601,6 @@ function Demo() {
 ### 原理讲解
 
 高阶组件本质上是一个函数，参数是一个组件，返回值是一个增强后的新组件。HOC 通过 props 代理、反向继承等方式，实现逻辑复用、权限控制、数据注入、跨组件通信等功能。常见场景有：权限校验、日志埋点、主题切换、表单处理等。
-
-
 
 ::: details 示例代码
 
@@ -384,8 +633,6 @@ Hooks 是 React 16.8 引入的函数，允许在函数组件中使用 state、�
 
 Hooks 解决了函数组件无法拥有自身状态和副作用的问题。通过 useState 管理状态，useEffect 处理副作用，useContext 访问上下文，useMemo/useCallback 优化性能，useRef 获取 DOM 或保存变量。自定义 hooks 还能复用逻辑。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -415,8 +662,6 @@ useEffect 在浏览器完成布局与绘制后异步执行，useLayoutEffect 在
 - useEffect：不会阻塞浏览器渲染，适合处理副作用（如数据请求、事件监听等）。
 - useLayoutEffect：会阻塞浏览器绘制，适合需要读取 DOM 布局并同步修改的场景（如测量、动画等）。
 - 一般优先用 useEffect，只有确实需要同步操作 DOM 时才用 useLayoutEffect。
-
-
 
 ::: details 示例代码
 
@@ -466,8 +711,6 @@ Redux 通过单一状态树（Store）集中管理应用状态，所有状态变
 - **Dispatch**：派发 action，触发 reducer 执行。
 - Redux 遵循"单向数据流"，所有状态变更可追溯、可预测，便于调试和维护。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -506,8 +749,6 @@ Redux 是专门的全局状态管理库，适合复杂应用，拥有中间件�
 - **Redux**：集中式管理，支持中间件、异步、插件，适合大型项目和复杂状态逻辑。
 - **Context**：用于跨层级传递数据，避免 props 层层传递，适合主题、语言等简单全局数据。
 - Context 更新会导致所有消费组件重新渲染，Redux 通过 connect 精细控制渲染。
-
-
 
 ::: details 示例代码
 
@@ -548,8 +789,6 @@ function ThemeButton() {
 - 合成事件对象会被复用（池化），事件回调后属性会被清空，需异步访问时调用 event.persist()。
 - 原生事件直接绑定在 DOM 元素上，兼容性和性能不如合成事件。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -583,8 +822,6 @@ React 通过 React.lazy 和 Suspense 实现组件的懒加载和代码分割，�
 - **Suspense**：用于包裹懒加载组件，提供加载中的 fallback UI。
 - 结合 Webpack 等工具实现路由级、组件级代码分割。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -615,8 +852,6 @@ function App() {
 - **useMemo/useCallback**：缓存计算结果或函数，防止因父组件渲染导致子组件 props 变化。
 - **shouldComponentUpdate/PureComponent**：类组件中通过浅比较 props 和 state，决定是否需要更新。
 - 合理拆分组件、提升状态、减少匿名函数和对象的创建，也能减少无效渲染。
-
-
 
 ::: details 示例代码
 
@@ -650,8 +885,6 @@ Fiber 架构是 React 16 引入的新协调引擎，实现了可中断、可恢�
 - Fiber 将渲染任务拆分为更小的单元（fiber），每次只做一部分工作，空闲时再继续，避免长时间阻塞主线程。
 - 支持优先级调度、任务中断与恢复、并发渲染等特性。
 - 使 React 能够实现如时间分片、Suspense、并发模式等高级功能。
-
-
 
 Fiber 是底层实现，开发者无需直接操作。可以通过 React 18 的并发特性体验 Fiber 带来的好处：
 
@@ -696,10 +929,7 @@ function Demo() {
 - 受控组件：表单值受 state 控制，onChange 时进行校验，设置错误提示。
 - 第三方库：如 Formik、react-hook-form 提供更完善的表单管理和校验机制，支持异步校验、校验规则复用等。
 
-
-
 ::: details 示例代码
-
 
 ```jsx
 // 简单自定义校验
@@ -737,8 +967,6 @@ React 的单向数据流指的是数据只能由父组件通过 props 向下传�
 - 子组件如需影响父组件数据，需通过 props 传递回调函数，由父组件处理数据更新。
 - 单向数据流有助于应用结构清晰、状态可控，减少数据混乱。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -771,8 +999,6 @@ React SSR 通过在服务器端将组件渲染为 HTML 字符串，发送到客�
 - 客户端接收到 HTML 后，React 通过 hydrate方法接管页面，实现无缝切换为 SPA。
 - SSR 提升首屏渲染速度和 SEO，但实现和部署更复杂。
 
-
-
 ::: details 示例代码
 
 ```js
@@ -793,7 +1019,6 @@ hydrateRoot(document.getElementById('root'), <App />);
 
 :::
 
-
 ## 什么是 React Portals？应用场景有哪些？
 
 ### 核心答案
@@ -804,8 +1029,6 @@ React Portals 允许将子节点渲染到父组件以外的 DOM 节点中，常�
 
 - 通过 `ReactDOM.createPortal(child, container)`，可以将组件渲染到指定的 DOM 节点（如 body）下。
 - 解决了 z-index、样式隔离、事件冒泡等问题，便于实现全局层级的 UI 组件。
-
-
 
 ::: details 示例代码
 
@@ -836,8 +1059,6 @@ function Modal({ children }) {
 - 错误边界只能用类组件实现，不能捕获事件处理、异步、服务端渲染等错误。
 - 当子组件抛出错误时，错误边界会渲染备用 UI，防止整个应用崩溃。
 - 常用于全局错误提示、局部降级等场景。
-
-
 
 ::: details 示例代码
 
@@ -883,10 +1104,7 @@ React 实现动画可以通过 CSS 动画、原生 JS 动画，或使用第三�
 - **react-transition-group**：提供 Transition、CSSTransition 等组件，配合状态切换实现进出场动画。
 - **framer-motion**：更强大的动画库，支持物理动画、手势等。
 
-
-
 ::: details 示例代码
-
 
 ```jsx
 // react-transition-group 示例：
@@ -923,8 +1141,6 @@ Context API 用于在组件树中跨层级传递数据，避免 props 层层传�
 
 - 通过 `React.createContext` 创建上下文对象，`Provider` 提供数据，`Consumer` 或 `useContext` 消费数据。
 - Context 更新会导致所有消费组件重新渲染，适合全局性、稳定性高的数据。
-
-
 
 ::: details 示例代码
 
@@ -967,8 +1183,6 @@ React 18 引入了并发特性（Concurrent Features）、自动批处理（Auto
 - **useInsertionEffect**：在 DOM 变更前插入样式，适合 CSS-in-JS。
 - **改进 SSR**：支持流式渲染，提升首屏速度。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -1010,8 +1224,6 @@ PureComponent 是 React 提供的优化型类组件，自动实现了浅层 prop
 - **PureComponent**：重写了 shouldComponentUpdate，自动进行浅比较，只有 props 或 state 发生实际变化时才渲染。
 - 适合 props 和 state 结构简单、无深层嵌套的场景。
 
-
-
 ::: details 示例代码
 
 ```jsx
@@ -1040,8 +1252,6 @@ Context.Provider 用于在组件树中提供上下文数据，Context.Consumer �
 - **Provider**：通过 value 属性向下传递数据，所有后代组件都能访问。
 - **Consumer**：通过函数作为子组件的方式获取上下文数据。
 - 也可以用 useContext 钩子在函数组件中消费数据。
-
-
 
 ::: details 示例代码
 
@@ -1078,8 +1288,6 @@ React 会将多次 setState 合并为一次批量更新，减少渲染次数，�
 - 在 React 的事件处理、生命周期等环境下，setState 不会立即更新，而是放入队列，事件循环结束后统一执行。
 - 在 setTimeout、原生事件等环境下，setState 是同步的。
 - React 18 开始，自动批处理范围更广，包括异步回调等。
-
-
 
 ::: details 示例代码
 
